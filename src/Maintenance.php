@@ -9,12 +9,12 @@ declare(strict_types=1);
 
 namespace WM\Warp;
 
-use WM\Warp\Database\Importer;
+use WM\Warp\Migration\Target;
 use WM\Warp\Migration\Runner;
 
 /**
  * A migration that nobody confirmed is confirmed automatically after 7 days, so the set-aside tables
- * do not take up space forever. Runs daily through WP-Cron and on visits of the admin.
+ * and files do not take up space forever. Runs daily through WP-Cron and on visits of the admin.
  */
 final class Maintenance {
 
@@ -43,11 +43,11 @@ final class Maintenance {
 	 */
 	public static function run(): void {
 		$limit  = time() - self::CONFIRM_AFTER;
-		$import = Importer::pending();
+		$import = Target::pending();
 
 		try {
 			if ( null !== $import && $import['finished'] < $limit ) {
-				Importer::confirm();
+				Target::confirm();
 			}
 
 			Runner::expire( $limit );

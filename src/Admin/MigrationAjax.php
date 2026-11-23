@@ -12,6 +12,8 @@ namespace WM\Warp\Admin;
 use WM\Warp\Api\ClientError;
 use WM\Warp\Database\ReplaceRule;
 use WM\Warp\Database\Schema;
+use WM\Warp\Files\Excludes;
+use WM\Warp\Files\Groups;
 use WM\Warp\Migration\Runner;
 use WM\Warp\Sites\ConnectionStore;
 use WM\Warp\Sites\SiteIdentity;
@@ -96,6 +98,7 @@ final class MigrationAjax {
 		// phpcs:disable WordPress.Security.NonceVerification.Missing
 		$connection = $this->outgoing->get( isset( $_POST['connection'] ) ? sanitize_key( wp_unslash( $_POST['connection'] ) ) : '' );
 		$direction  = isset( $_POST['direction'] ) && Runner::PUSH === $_POST['direction'] ? Runner::PUSH : Runner::PULL;
+		$database   = ! empty( $_POST['database'] );
 		$mode       = isset( $_POST['mode'] ) ? sanitize_key( wp_unslash( $_POST['mode'] ) ) : Schema::MODE_PREFIX;
 		$selected   = isset( $_POST['tables'] ) && is_array( $_POST['tables'] ) ? array_values( array_map( 'sanitize_text_field', wp_unslash( $_POST['tables'] ) ) ) : array();
 		$protocol   = ! empty( $_POST['protocol'] );
@@ -113,7 +116,7 @@ final class MigrationAjax {
 			$mode = Schema::MODE_PREFIX;
 		}
 
-		if ( Schema::MODE_SELECTED === $mode && array() === $selected ) {
+		if ( $database && Schema::MODE_SELECTED === $mode && array() === $selected ) {
 			throw new \RuntimeException( __( 'Choose at least one table.', 'wm-warp' ) );
 		}
 
@@ -135,7 +138,58 @@ final class MigrationAjax {
 			$custom[] = new ReplaceRule( $find, $replace, $regex, in_array( $index, $cases, true ) );
 		}
 
-		return $runner->start( $connection, $direction, $mode, $selected, $protocol, $custom );
+		return $runner->start( $connection, $direction, $database, $mode, $selected, $protocol, $custom, self::files() );
+	}
+
+	/**
+	 * File groups chosen in the form.
+	 *
+	 * @return list<array{group: string, mode: string, selected: list<string>, since: int, excludes: list<string>, allow_php: bool}>
+	 * @throws \RuntimeException When the date is missing.
+	 */
+	private static function files(): array {
+		// Nonce checked in handle().
+		// phpcs:disable WordPress.Security.NonceVerification.Missing
+		$files = array();
+
+		foreach ( Groups::ALL as $group ) {
+			if ( empty( $_POST[ 'files_' . $group ] ) ) {
+				continue;
+			}
+
+			$mode     = isset( $_POST[ $group . '_mode' ] ) ? sanitize_key( wp_unslash( $_POST[ $group . '_mode' ] ) ) : '';
+			$selected = isset( $_POST[ $group . '_items' ] ) && is_array( $_POST[ $group . '_items' ] ) ? array_values( array_map( 'sanitize_text_field', wp_unslash( $_POST[ $group . '_items' ] ) ) ) : array();
+			$excludes = isset( $_POST[ $group . '_excludes' ] ) ? sanitize_textarea_field( wp_unslash( $_POST[ $group . '_excludes' ] ) ) : '';
+			$since    = 0;
+
+			if ( Groups::UPLOADS === $group ) {
+				$mode = in_array( $mode, array( 'sync', 'since', 'mirror' ), true ) ? $mode : 'sync';
+
+				if ( 'since' === $mode ) {
+					$date  = isset( $_POST['uploads_since'] ) ? sanitize_text_field( wp_unslash( $_POST['uploads_since'] ) ) : '';
+					$since = 1 === preg_match( '/^\d{4}-\d{2}-\d{2}$/', $date ) ? (int) ( new \DateTimeImmutable( $date, wp_timezone() ) )->getTimestamp() : 0;
+
+					if ( 0 === $since ) {
+						throw new \RuntimeException( __( 'Enter the date from which media files are transferred.', 'wm-warp' ) );
+					}
+				}
+			} else {
+				$default = Groups::THEMES === $group ? 'active' : 'all';
+				$mode    = in_array( $mode, array( 'all', 'active', 'selected', 'except' ), true ) ? $mode : $default;
+			}
+
+			$files[] = array(
+				'group'     => $group,
+				'mode'      => $mode,
+				'selected'  => $selected,
+				'since'     => $since,
+				'excludes'  => Excludes::lines( $excludes ),
+				'allow_php' => Groups::UPLOADS === $group && ! empty( $_POST['uploads_php'] ),
+			);
+		}
+		// phpcs:enable
+
+		return $files;
 	}
 
 	/**
@@ -173,6 +227,7 @@ final class MigrationAjax {
 	 */
 	public static function progress( array $state ): array {
 		$tables  = is_array( $state['tables'] ?? null ) ? $state['tables'] : array();
+		$files   = is_array( $state['files'] ?? null ) ? $state['files'] : null;
 		$total   = 0;
 		$done    = 0;
 		$current = '';
@@ -187,18 +242,24 @@ final class MigrationAjax {
 			}
 		}
 
+		if ( null !== $files ) {
+			$total += (int) $files['total'];
+			$done  += min( (int) $files['total'], (int) $files['sent'] );
+		}
+
 		$status  = (string) $state['status'];
 		$percent = Runner::DONE === $status || Runner::CONFIRMED === $status || Runner::ROLLED_BACK === $status ? 100 : ( $total > 0 ? min( 99, (int) floor( 100 * $done / $total ) ) : 0 );
 		$end     = (int) $state['finished'] > 0 ? (int) $state['finished'] : time();
 		$error   = is_array( $state['error'] ?? null ) ? $state['error'] : null;
 
 		return array(
-			'status'  => $status,
-			'percent' => $percent,
-			'phase'   => self::phase_text( $state, $current, count( $tables ) ),
-			'stats'   => self::stats_text( (int) $state['bytes'], max( 1, $end - (int) $state['started'] ) ),
-			'summary' => self::summary_text( $state ),
-			'error'   => null === $error ? null : array(
+			'status'   => $status,
+			'percent'  => $percent,
+			'phase'    => self::phase_text( $state, $current, count( $tables ) ),
+			'stats'    => self::stats_text( (int) $state['bytes'], max( 1, $end - (int) $state['started'] ) ),
+			'summary'  => self::summary_text( $state ),
+			'warnings' => null === $files || Runner::RUNNING === $status ? array() : array_values( array_map( 'strval', array_slice( (array) $files['warnings'], 0, 50 ) ) ),
+			'error'    => null === $error ? null : array(
 				'message' => (string) $error['message'],
 				'where'   => '' !== (string) $error['table']
 					/* translators: %s: table name. */
@@ -218,11 +279,30 @@ final class MigrationAjax {
 	 */
 	private static function phase_text( array $state, string $current, int $count ): string {
 		return match ( (string) $state['phase'] ) {
-			'prepare' => __( 'Preparing tables…', 'wm-warp' ),
+			'prepare' => __( 'Preparing…', 'wm-warp' ),
 			/* translators: 1: table name, 2: number of the table, 3: number of tables. */
 			'tables'  => sprintf( __( 'Transferring %1$s (%2$d of %3$d)', 'wm-warp' ), $current, min( $count, (int) $state['index'] + 1 ), $count ),
-			'finish'  => __( 'Checking the data and replacing the tables…', 'wm-warp' ),
+			'files'   => self::files_text( is_array( $state['files'] ?? null ) ? $state['files'] : array() ),
+			'swap'    => __( 'Replacing the files…', 'wm-warp' ),
+			'finish'  => false === ( $state['database'] ?? true ) ? __( 'Finishing…', 'wm-warp' ) : __( 'Checking the data and replacing the tables…', 'wm-warp' ),
 			default   => '',
+		};
+	}
+
+	/**
+	 * What is happening with the files now.
+	 *
+	 * @param array<string, mixed> $files File state.
+	 */
+	private static function files_text( array $files ): string {
+		return match ( (string) ( $files['step'] ?? '' ) ) {
+			/* translators: %s: number of files. */
+			'scan'     => sprintf( __( 'Comparing files on both sites (%s found)…', 'wm-warp' ), self::number( (int) $files['scanned'] ) ),
+			/* translators: 1: number of checked files, 2: number of files to check. */
+			'compare', 'hash' => sprintf( __( 'Comparing contents of files (%1$s of %2$s)…', 'wm-warp' ), self::number( (int) $files['ci'] ), self::number( (int) $files['checks'] ) ),
+			/* translators: 1: number of transferred files, 2: number of files to transfer. */
+			'transfer' => sprintf( __( 'Transferring files (%1$s of %2$s)', 'wm-warp' ), self::number( (int) $files['moved'] ), self::number( (int) $files['count'] ) ),
+			default    => __( 'Preparing plugins and themes…', 'wm-warp' ),
 		};
 	}
 
@@ -244,20 +324,29 @@ final class MigrationAjax {
 	 */
 	private static function summary_text( array $state ): string {
 		$summary = is_array( $state['summary'] ?? null ) ? $state['summary'] : null;
+		$files   = is_array( $state['files'] ?? null ) && is_array( $state['files']['result'] ?? null ) ? $state['files']['result'] : null;
 
-		if ( null === $summary ) {
+		if ( null === $summary && null === $files ) {
 			return '';
 		}
 
 		$seconds = max( 1, (int) $state['finished'] - (int) $state['started'] );
-		$text    = sprintf(
-			/* translators: 1: data size, 2: duration, 3: number of tables, 4: number of rows. */
-			__( 'Transferred %1$s in %2$s: %3$s tables, %4$s rows.', 'wm-warp' ),
-			self::size( (int) $state['bytes'] ),
-			self::duration( $seconds ),
-			self::number( (int) ( $summary['tables'] ?? 0 ) ),
-			self::number( (int) ( $summary['rows'] ?? 0 ) )
-		);
+		/* translators: 1: data size, 2: duration. */
+		$text = sprintf( __( 'Transferred %1$s in %2$s.', 'wm-warp' ), self::size( (int) $state['bytes'] ), self::duration( $seconds ) );
+
+		if ( null !== $summary ) {
+			/* translators: 1: number of tables, 2: number of rows. */
+			$text .= ' ' . sprintf( __( 'Database: %1$s tables, %2$s rows.', 'wm-warp' ), self::number( (int) ( $summary['tables'] ?? 0 ) ), self::number( (int) ( $summary['rows'] ?? 0 ) ) );
+		}
+
+		if ( null !== $files ) {
+			/* translators: 1: number of files, 2: number of deleted files, 3: number of plugins and themes. */
+			$text .= ' ' . sprintf( __( 'Files: %1$s changed, %2$s deleted, %3$s plugins and themes replaced.', 'wm-warp' ), self::number( (int) $files['files'] ), self::number( (int) $files['deleted'] ), self::number( (int) $files['items'] ) );
+		}
+
+		if ( null === $summary ) {
+			return $text;
+		}
 
 		$collations = is_array( $summary['collations'] ?? null ) ? $summary['collations'] : array();
 		foreach ( $collations as $from => $to ) {

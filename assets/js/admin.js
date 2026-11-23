@@ -122,6 +122,14 @@
 
 			if ( 'done' === progress.status ) {
 				part( 'summary' ).textContent = progress.summary;
+				var warnings = part( 'warnings' );
+				warnings.textContent = '';
+				( progress.warnings || [] ).forEach( function ( text ) {
+					var item = document.createElement( 'li' );
+					item.textContent = text;
+					warnings.appendChild( item );
+				} );
+				warnings.hidden = ! warnings.children.length;
 				part( 'logged-out' ).hidden = false !== progress.logged_in;
 				show( 'result' );
 			} else if ( 'failed' === progress.status && progress.error ) {
@@ -163,6 +171,42 @@
 			if ( remove ) {
 				remove.closest( 'tr' ).remove();
 			}
+		} );
+
+		// Sections with a checkbox in the legend: Database, Media, Themes, Plugins.
+		form.querySelectorAll( '[data-wm-warp-group-toggle]' ).forEach( function ( toggle ) {
+			var update = function () {
+				toggle.closest( '[data-wm-warp-group]' ).querySelector( '[data-wm-warp-group-body]' ).hidden = ! toggle.checked;
+				if ( 'database' === toggle.name ) {
+					form.querySelectorAll( '[data-wm-warp-database-only]' ).forEach( function ( section ) {
+						section.hidden = ! toggle.checked;
+					} );
+				}
+			};
+			toggle.addEventListener( 'change', update );
+			update();
+		} );
+
+		form.querySelectorAll( 'input[name="uploads_mode"]' ).forEach( function ( radio ) {
+			radio.addEventListener( 'change', function () {
+				part( 'since' ).hidden = 'since' !== form.querySelector( 'input[name="uploads_mode"]:checked' ).value;
+			} );
+		} );
+
+		// Plugins and themes: the list shows what the mode transfers; checkboxes only for selecting.
+		form.querySelectorAll( '[data-wm-warp-items]' ).forEach( function ( box ) {
+			var update = function () {
+				var checked = box.querySelector( 'input[type="radio"]:checked' );
+				var mode = checked ? checked.value : 'all';
+				box.querySelectorAll( '.wm-warp__item' ).forEach( function ( row ) {
+					row.hidden = 'active' === mode && '1' !== row.getAttribute( 'data-active' );
+					row.querySelector( '[data-wm-warp-item-check]' ).hidden = 'selected' !== mode && 'except' !== mode;
+				} );
+			};
+			box.querySelectorAll( 'input[type="radio"]' ).forEach( function ( radio ) {
+				radio.addEventListener( 'change', update );
+			} );
+			update();
 		} );
 
 		form.querySelectorAll( 'input[name="mode"]' ).forEach( function ( radio ) {

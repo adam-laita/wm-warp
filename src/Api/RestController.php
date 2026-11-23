@@ -80,7 +80,7 @@ final class RestController {
 			);
 		}
 
-		foreach ( DatabaseRoutes::ROUTES as $route ) {
+		foreach ( array_merge( DatabaseRoutes::ROUTES, FileRoutes::ROUTES ) as $route ) {
 			register_rest_route(
 				Protocol::REST_NAMESPACE,
 				'/' . $route,
@@ -94,7 +94,7 @@ final class RestController {
 	}
 
 	/**
-	 * Migration request (database), handled by DatabaseRoutes.
+	 * Migration request, handled by DatabaseRoutes (db/*) or FileRoutes (files/*, run/*).
 	 *
 	 * @param \WP_REST_Request $request Request.
 	 * @param string           $route   Route below the namespace.
@@ -109,12 +109,14 @@ final class RestController {
 		}
 
 		try {
-			$result = DatabaseRoutes::handle( $route, $opened['data'], $opened['payload'], $auth['connection'] );
+			$result = str_starts_with( $route, 'db/' )
+				? DatabaseRoutes::handle( $route, $opened['data'], $opened['payload'], $auth['connection'] )
+				: FileRoutes::handle( $route, $opened['data'], $opened['payload'], $auth['connection']->name );
 		} catch ( \Throwable $error ) {
 			return new \WP_Error( 'wm_warp_migration', $error->getMessage(), array( 'status' => 500 ) );
 		}
 
-		return new BinaryResponse( Envelope::seal( $result['data'], $auth['secret'], Envelope::RESPONSE, $result['payload'] ) );
+		return new BinaryResponse( Envelope::seal( $result['data'], $auth['secret'], Envelope::RESPONSE, $result['payload'], $result['deflate'] ?? true ) );
 	}
 
 	/**

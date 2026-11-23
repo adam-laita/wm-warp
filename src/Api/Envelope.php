@@ -36,9 +36,10 @@ final class Envelope {
 	 * @param string               $secret    Connection or pairing secret.
 	 * @param string               $direction self::REQUEST or self::RESPONSE.
 	 * @param string               $payload   Binary payload, empty for none.
+	 * @param bool                 $deflate   Compress; false for payloads that are already compressed (images, videos).
 	 * @throws \JsonException When the data cannot be encoded.
 	 */
-	public static function seal( array $data, string $secret, string $direction, string $payload = '' ): string {
+	public static function seal( array $data, string $secret, string $direction, string $payload = '', bool $deflate = true ): string {
 		$json  = json_encode( $data, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ); // phpcs:ignore WordPress.WP.AlternativeFunctions.json_encode_json_encode -- Pure class, runs without WordPress in tests.
 		$flags = 0;
 
@@ -47,7 +48,7 @@ final class Envelope {
 			$flags |= self::FLAG_PAYLOAD;
 		}
 
-		$deflated = gzdeflate( $json, 1 );
+		$deflated = $deflate ? gzdeflate( $json, 1 ) : false;
 
 		if ( false !== $deflated && strlen( $deflated ) < strlen( $json ) ) {
 			$json   = $deflated;

@@ -62,11 +62,12 @@ final class Client {
 	 * @param string               $site_id       Expected ID of the other site.
 	 * @param string               $payload       Binary payload (table rows), empty for none.
 	 * @param int                  $timeout       Timeout in seconds.
+	 * @param bool                 $deflate       Compress the body.
 	 * @return array{data: array<string, mixed>, payload: string}
 	 * @throws ClientError When the request fails.
 	 */
-	public function exchange( Endpoint $endpoint, string $action, array $data, string $secret, string $connection_id, string $site_id, string $payload = '', int $timeout = self::TIMEOUT ): array {
-		$body     = Envelope::seal( $data, $secret, Envelope::REQUEST, $payload );
+	public function exchange( Endpoint $endpoint, string $action, array $data, string $secret, string $connection_id, string $site_id, string $payload = '', int $timeout = self::TIMEOUT, bool $deflate = true ): array {
+		$body     = Envelope::seal( $data, $secret, Envelope::REQUEST, $payload, $deflate );
 		$route    = '/' . Protocol::REST_NAMESPACE . '/' . $action;
 		$response = $this->post( $endpoint, $action, $route, $body, $secret, $connection_id, 0, $timeout );
 

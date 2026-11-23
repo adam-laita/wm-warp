@@ -10,7 +10,7 @@ declare(strict_types=1);
 namespace WM\Warp\Admin;
 
 use WM\Warp\Api\ClientError;
-use WM\Warp\Database\Importer;
+use WM\Warp\Migration\Target;
 use WM\Warp\Migration\Runner;
 use WM\Warp\Sites\ConnectionStore;
 use WM\Warp\Sites\Connector;
@@ -76,7 +76,7 @@ final class Actions {
 				$runner = new Runner( $this->identity, $this->outgoing );
 				'rollback' === $command ? $runner->rollback() : $runner->confirm();
 			} else {
-				'rollback' === $command ? Importer::rollback() : Importer::confirm();
+				'rollback' === $command ? Target::rollback() : Target::confirm();
 			}
 		} catch ( \Throwable $error ) {
 			$this->flash->set( 'error', $error->getMessage() );
@@ -88,7 +88,7 @@ final class Actions {
 			MigrationAjax::log_in_again( $login );
 		}
 
-		$this->flash->set( 'success', 'rollback' === $command ? __( 'The migration was undone; the previous tables are back.', 'wm-warp' ) : __( 'The migration is confirmed.', 'wm-warp' ) );
+		$this->flash->set( 'success', 'rollback' === $command ? __( 'The migration was undone; the previous data are back.', 'wm-warp' ) : __( 'The migration is confirmed.', 'wm-warp' ) );
 		$this->redirect();
 	}
 

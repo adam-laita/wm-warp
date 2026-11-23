@@ -41,6 +41,7 @@ final class Environment {
 			'collate'     => $wpdb->collate,
 			'prefix'      => $wpdb->base_prefix,
 			'multisite'   => is_multisite(),
+			'os'          => PHP_OS_FAMILY,
 			'limits'      => array(
 				'post_max_size'       => Bytes::from_ini( (string) ini_get( 'post_max_size' ) ),
 				'upload_max_filesize' => Bytes::from_ini( (string) ini_get( 'upload_max_filesize' ) ),

@@ -9,7 +9,7 @@ declare(strict_types=1);
 
 namespace WM\Warp\Admin;
 
-use WM\Warp\Database\Importer;
+use WM\Warp\Migration\Target;
 use WM\Warp\Migration\Runner;
 use WM\Warp\Plugin;
 use WM\Warp\Sites\ConnectionStore;
@@ -178,19 +178,19 @@ final class AdminPage {
 	 */
 	private function render_pending(): void {
 		$run    = Runner::current();
-		$import = Importer::pending();
+		$import = Target::pending();
 
 		if ( null !== $run && Runner::DONE === $run['status'] ) {
 			$scope = 'run';
 			$text  = Runner::PULL === $run['direction']
 				/* translators: 1: domain of the other site, 2: date and time. */
-				? sprintf( __( 'The pull from %1$s (%2$s) waits for confirmation. The previous tables of this site are kept aside until then.', 'wm-warp' ), (string) $run['host'], self::date( (int) $run['finished'] ) )
+				? sprintf( __( 'The pull from %1$s (%2$s) waits for confirmation. The previous data of this site are kept aside until then.', 'wm-warp' ), (string) $run['host'], self::date( (int) $run['finished'] ) )
 				/* translators: 1: domain of the other site, 2: date and time. */
-				: sprintf( __( 'The push to %1$s (%2$s) waits for confirmation. The previous tables of that site are kept aside until then.', 'wm-warp' ), (string) $run['host'], self::date( (int) $run['finished'] ) );
+				: sprintf( __( 'The push to %1$s (%2$s) waits for confirmation. The previous data of that site are kept aside until then.', 'wm-warp' ), (string) $run['host'], self::date( (int) $run['finished'] ) );
 		} elseif ( null !== $import ) {
 			$scope = 'import';
 			/* translators: 1: name of the other site, 2: date and time. */
-			$text = sprintf( __( 'The migration from %1$s (%2$s) waits for confirmation. The previous tables of this site are kept aside until then.', 'wm-warp' ), $import['source'], self::date( $import['finished'] ) );
+			$text = sprintf( __( 'The migration from %1$s (%2$s) waits for confirmation. The previous data of this site are kept aside until then.', 'wm-warp' ), $import['source'], self::date( $import['finished'] ) );
 		} else {
 			return;
 		}

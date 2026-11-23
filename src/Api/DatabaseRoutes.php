@@ -14,15 +14,17 @@ use WM\Warp\Database\Importer;
 use WM\Warp\Database\RowCodec;
 use WM\Warp\Database\Schema;
 use WM\Warp\Database\TableInfo;
+use WM\Warp\Migration\Target;
 use WM\Warp\Sites\Connection;
 
 /**
  * Requests of a migration: this site is the source (pull: tables, export) or the target (push: begin,
- * import, finish, confirm, rollback, abort). Requests are already authenticated by RestController.
+ * import, finish). Confirm, Undo and Cancel are in FileRoutes (run/*), for tables and files together.
+ * Requests are already authenticated by RestController.
  */
 final class DatabaseRoutes {
 
-	public const ROUTES = array( 'db/tables', 'db/export', 'db/begin', 'db/import', 'db/finish', 'db/confirm', 'db/rollback', 'db/abort' );
+	public const ROUTES = array( 'db/tables', 'db/export', 'db/begin', 'db/import', 'db/finish' );
 
 	/**
 	 * Handles a request.
@@ -46,9 +48,6 @@ final class DatabaseRoutes {
 			'db/begin'    => self::begin( $data, $connection ),
 			'db/import'   => self::import( $data, $payload ),
 			'db/finish'   => array( 'data' => Importer::finish( self::run_id( $data ), self::expected( $data ) ) ),
-			'db/confirm'  => self::confirm(),
-			'db/rollback' => self::rollback(),
-			'db/abort'    => self::abort( $data ),
 			default       => throw new \UnexpectedValueException( 'Unknown route.' ),
 		};
 
@@ -122,6 +121,7 @@ final class DatabaseRoutes {
 	private static function begin( array $data, Connection $connection ): array {
 		$tables = array_map( array( TableInfo::class, 'from_array' ), is_array( $data['tables'] ?? null ) ? array_values( $data['tables'] ) : array() );
 
+		Target::settle( self::run_id( $data ) );
 		Importer::begin( self::run_id( $data ), $connection->name, is_string( $data['source_prefix'] ?? null ) ? $data['source_prefix'] : '', $tables );
 
 		return array( 'data' => array( 'started' => true ) );
@@ -143,40 +143,6 @@ final class DatabaseRoutes {
 				'inserted' => Importer::insert( self::run_id( $data ), is_string( $data['table'] ?? null ) ? $data['table'] : '', $columns, $rows, is_int( $data['seq'] ?? null ) ? $data['seq'] : 0 ),
 			),
 		);
-	}
-
-	/**
-	 * Confirms the migration on this site.
-	 *
-	 * @return array{data: array<string, mixed>}
-	 */
-	private static function confirm(): array {
-		Importer::confirm();
-
-		return array( 'data' => array( 'confirmed' => true ) );
-	}
-
-	/**
-	 * Undoes the migration on this site.
-	 *
-	 * @return array{data: array<string, mixed>}
-	 */
-	private static function rollback(): array {
-		Importer::rollback();
-
-		return array( 'data' => array( 'rolled_back' => true ) );
-	}
-
-	/**
-	 * Discards an unfinished load on this site.
-	 *
-	 * @param array<string, mixed> $data Request data: run_id.
-	 * @return array{data: array<string, mixed>}
-	 */
-	private static function abort( array $data ): array {
-		Importer::abort( self::run_id( $data ) );
-
-		return array( 'data' => array( 'aborted' => true ) );
 	}
 
 	/**

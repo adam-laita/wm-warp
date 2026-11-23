@@ -27,7 +27,7 @@ msgid "Unknown command."
 msgstr ""
 
 #: src/Admin/Actions.php src/Admin/MigrationView.php
-msgid "The migration was undone; the previous tables are back."
+msgid "The migration was undone; the previous data are back."
 msgstr ""
 
 #: src/Admin/Actions.php src/Admin/MigrationView.php
@@ -84,17 +84,17 @@ msgstr ""
 
 #. translators: 1: domain of the other site, 2: date and time.
 #: src/Admin/AdminPage.php
-msgid "The pull from %1$s (%2$s) waits for confirmation. The previous tables of this site are kept aside until then."
+msgid "The pull from %1$s (%2$s) waits for confirmation. The previous data of this site are kept aside until then."
 msgstr ""
 
 #. translators: 1: domain of the other site, 2: date and time.
 #: src/Admin/AdminPage.php
-msgid "The push to %1$s (%2$s) waits for confirmation. The previous tables of that site are kept aside until then."
+msgid "The push to %1$s (%2$s) waits for confirmation. The previous data of that site are kept aside until then."
 msgstr ""
 
 #. translators: 1: name of the other site, 2: date and time.
 #: src/Admin/AdminPage.php
-msgid "The migration from %1$s (%2$s) waits for confirmation. The previous tables of this site are kept aside until then."
+msgid "The migration from %1$s (%2$s) waits for confirmation. The previous data of this site are kept aside until then."
 msgstr ""
 
 #: src/Admin/AdminPage.php src/Admin/MigrationView.php
@@ -122,13 +122,17 @@ msgstr ""
 msgid "The regular expression %s is not valid. Write it with delimiters, e.g. /old-(\\d+)/."
 msgstr ""
 
+#: src/Admin/MigrationAjax.php
+msgid "Enter the date from which media files are transferred."
+msgstr ""
+
 #. translators: %s: table name.
 #: src/Admin/MigrationAjax.php
 msgid "Table %s"
 msgstr ""
 
 #: src/Admin/MigrationAjax.php
-msgid "Preparing tables…"
+msgid "Preparing…"
 msgstr ""
 
 #. translators: 1: table name, 2: number of the table, 3: number of tables.
@@ -137,7 +141,34 @@ msgid "Transferring %1$s (%2$d of %3$d)"
 msgstr ""
 
 #: src/Admin/MigrationAjax.php
+msgid "Replacing the files…"
+msgstr ""
+
+#: src/Admin/MigrationAjax.php
+msgid "Finishing…"
+msgstr ""
+
+#: src/Admin/MigrationAjax.php
 msgid "Checking the data and replacing the tables…"
+msgstr ""
+
+#. translators: %s: number of files.
+#: src/Admin/MigrationAjax.php
+msgid "Comparing files on both sites (%s found)…"
+msgstr ""
+
+#. translators: 1: number of checked files, 2: number of files to check.
+#: src/Admin/MigrationAjax.php
+msgid "Comparing contents of files (%1$s of %2$s)…"
+msgstr ""
+
+#. translators: 1: number of transferred files, 2: number of files to transfer.
+#: src/Admin/MigrationAjax.php
+msgid "Transferring files (%1$s of %2$s)"
+msgstr ""
+
+#: src/Admin/MigrationAjax.php
+msgid "Preparing plugins and themes…"
 msgstr ""
 
 #. translators: 1: data size, 2: duration, 3: speed per second.
@@ -145,9 +176,19 @@ msgstr ""
 msgid "%1$s in %2$s (%3$s/s)"
 msgstr ""
 
-#. translators: 1: data size, 2: duration, 3: number of tables, 4: number of rows.
+#. translators: 1: data size, 2: duration.
 #: src/Admin/MigrationAjax.php
-msgid "Transferred %1$s in %2$s: %3$s tables, %4$s rows."
+msgid "Transferred %1$s in %2$s."
+msgstr ""
+
+#. translators: 1: number of tables, 2: number of rows.
+#: src/Admin/MigrationAjax.php
+msgid "Database: %1$s tables, %2$s rows."
+msgstr ""
+
+#. translators: 1: number of files, 2: number of deleted files, 3: number of plugins and themes.
+#: src/Admin/MigrationAjax.php
+msgid "Files: %1$s changed, %2$s deleted, %3$s plugins and themes replaced."
 msgstr ""
 
 #. translators: 1: collation of the source, 2: collation used instead.
@@ -189,12 +230,12 @@ msgstr ""
 
 #. translators: %s: domain of the other site.
 #: src/Admin/MigrationView.php
-msgid "The database of this site will be replaced with the data of %s."
+msgid "The chosen data of this site will be replaced with the data of %s."
 msgstr ""
 
 #. translators: %s: domain of the other site.
 #: src/Admin/MigrationView.php
-msgid "The database of %s will be replaced with the data of this site."
+msgid "The chosen data of %s will be replaced with the data of this site."
 msgstr ""
 
 #: src/Admin/MigrationView.php
@@ -308,12 +349,12 @@ msgid "Done, check the site"
 msgstr ""
 
 #: src/Admin/MigrationView.php
-msgid "The previous tables of this site are kept aside. Confirm to delete them, or undo to get the previous state back. The migration is confirmed automatically after 7 days or with the next migration."
+msgid "The previous tables and files of this site are kept aside. Confirm to delete them, or undo to get the previous state back. The migration is confirmed automatically after 7 days or with the next migration."
 msgstr ""
 
 #. translators: %s: domain of the other site.
 #: src/Admin/MigrationView.php
-msgid "The previous tables of %s are kept aside. Confirm to delete them, or undo to get the previous state back. The migration is confirmed automatically after 7 days or with the next migration."
+msgid "The previous tables and files of %s are kept aside. Confirm to delete them, or undo to get the previous state back. The migration is confirmed automatically after 7 days or with the next migration."
 msgstr ""
 
 #: src/Admin/MigrationView.php
@@ -321,7 +362,7 @@ msgid "Open the site"
 msgstr ""
 
 #: src/Admin/MigrationView.php
-msgid "Undo the migration and restore the previous tables?"
+msgid "Undo the migration and restore the previous tables and files?"
 msgstr ""
 
 #: src/Admin/MigrationView.php
@@ -338,6 +379,122 @@ msgstr ""
 
 #: src/Admin/MigrationView.php
 msgid "Technical details"
+msgstr ""
+
+#: src/Admin/MigrationView.php
+msgid "WordPress and page builders (Elementor, Bricks…) do not need PHP in uploads; they store only images, CSS and fonts there. PHP files in uploads are either empty protection files that plugins create by themselves, or malicious code of a hacked site. Turn this on only if you know your site needs them."
+msgstr ""
+
+#: src/Admin/MigrationView.php
+msgid "Media Uploads"
+msgstr ""
+
+#: src/Admin/MigrationView.php
+msgid "Synchronize: transfer new and changed files, delete nothing"
+msgstr ""
+
+#: src/Admin/MigrationView.php
+msgid "Only files changed since a date"
+msgstr ""
+
+#: src/Admin/MigrationView.php
+msgid "Changed on or after"
+msgstr ""
+
+#: src/Admin/MigrationView.php
+msgid "Replace all: the target becomes an exact copy, files only on the target are removed"
+msgstr ""
+
+#: src/Admin/MigrationView.php
+msgid "Only differences are transferred. Replaced and removed files are kept aside until you confirm the migration."
+msgstr ""
+
+#: src/Admin/MigrationView.php
+msgid "Excluded files and PHP"
+msgstr ""
+
+#: src/Admin/MigrationView.php
+msgid "Transfer PHP files in uploads"
+msgstr ""
+
+#: src/Admin/MigrationView.php
+msgid "Themes"
+msgstr ""
+
+#: src/Admin/MigrationView.php
+msgid "Only the active theme (with its parent theme)"
+msgstr ""
+
+#: src/Admin/MigrationView.php
+msgid "All themes"
+msgstr ""
+
+#: src/Admin/MigrationView.php
+msgid "Only selected themes"
+msgstr ""
+
+#: src/Admin/MigrationView.php
+msgid "All themes except the selected ones"
+msgstr ""
+
+#: src/Admin/MigrationView.php
+msgid "Plugins"
+msgstr ""
+
+#: src/Admin/MigrationView.php
+msgid "All plugins"
+msgstr ""
+
+#: src/Admin/MigrationView.php
+msgid "Only active plugins"
+msgstr ""
+
+#: src/Admin/MigrationView.php
+msgid "Only selected plugins"
+msgstr ""
+
+#: src/Admin/MigrationView.php
+msgid "All plugins except the selected ones"
+msgstr ""
+
+#: src/Admin/MigrationView.php
+msgid "The source has nothing to transfer here."
+msgstr ""
+
+#: src/Admin/MigrationView.php
+msgid "link, never transferred"
+msgstr ""
+
+#: src/Admin/MigrationView.php
+msgid "Each chosen item is replaced as a whole folder, so no files of the old version stay behind. Items that are only on the target stay as they are."
+msgstr ""
+
+#: src/Admin/MigrationView.php
+msgid "Excluded files"
+msgstr ""
+
+#: src/Admin/MigrationView.php
+msgid "One pattern per line, like .gitignore (e.g. *.log or cache/)."
+msgstr ""
+
+#. translators: %s: version.
+#: src/Admin/MigrationView.php
+msgid "new, version %s"
+msgstr ""
+
+#. translators: %s: version.
+#: src/Admin/MigrationView.php
+msgid "version %s on both sites"
+msgstr ""
+
+#. translators: 1: version on the target, 2: version on the source.
+#: src/Admin/MigrationView.php
+msgid "update %1$s → %2$s"
+msgstr ""
+
+#. translators: 1: version on the target, 2: version on the source.
+#: src/Admin/MigrationView.php
+msgid "downgrade %1$s → %2$s"
 msgstr ""
 
 #: src/Admin/SettingsView.php
@@ -590,8 +747,57 @@ msgstr ""
 msgid "The other site responded with an error (HTTP %d). Check its PHP error log."
 msgstr ""
 
+#. translators: %s: path of a plugin or theme.
+#: src/Migration/FileRun.php
+msgid "Not replaced, it is or contains a link on the target: %s"
+msgstr ""
+
+#. translators: %s: path of a file.
+#: src/Migration/FileRun.php
+msgid "Skipped, its folder is a link on the target: %s"
+msgstr ""
+
+#. translators: %s: path of a file.
+#: src/Migration/FileRun.php
+msgid "Not replaced, it is a link or a folder on the target: %s"
+msgstr ""
+
+#. translators: %s: path of a file or folder.
+#: src/Migration/FileRun.php
+msgid "Skipped, it is a link on the source: %s"
+msgstr ""
+
+#. translators: %s: path of a file.
+#: src/Migration/FileRun.php
+msgid "Skipped, the name is not allowed on Windows: %s"
+msgstr ""
+
+#. translators: %s: path of a file.
+#: src/Migration/FileRun.php
+msgid "Skipped, another file has the same name in different letter case: %s"
+msgstr ""
+
+#. translators: 1: domain of the target, 2: size needed, 3: free size.
+#: src/Migration/FileRun.php
+msgid "There is not enough free disk space on %1$s: the files need %2$s, only %3$s is free."
+msgstr ""
+
+#. translators: %s: path of a file.
+#: src/Migration/FileRun.php
+msgid "Skipped, it was deleted on the source during the migration: %s"
+msgstr ""
+
+#. translators: %s: path of a file.
+#: src/Migration/FileRun.php
+msgid "Skipped, it changed on the source during the migration: %s"
+msgstr ""
+
 #: src/Migration/Runner.php
 msgid "Another migration is running on this site. Wait until it ends or cancel it."
+msgstr ""
+
+#: src/Migration/Runner.php
+msgid "Choose what to migrate: the database, media, themes or plugins."
 msgstr ""
 
 #: src/Migration/Runner.php
@@ -605,6 +811,14 @@ msgstr ""
 
 #: src/Migration/Runner.php
 msgid "The site of this migration is no longer connected."
+msgstr ""
+
+#: src/Migration/Runner.php
+msgid "No plugin is chosen. Choose plugins or uncheck Plugins."
+msgstr ""
+
+#: src/Migration/Runner.php
+msgid "No theme is chosen. Choose themes or uncheck Themes."
 msgstr ""
 
 #: src/Migration/Runner.php

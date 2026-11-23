@@ -13,6 +13,7 @@ use WM\Warp\Api\Client;
 use WM\Warp\Api\ClientError;
 use WM\Warp\Api\Endpoint;
 use WM\Warp\Api\Environment;
+use WM\Warp\Api\FileRoutes;
 use WM\Warp\Database\DatabaseError;
 use WM\Warp\Database\Exporter;
 use WM\Warp\Database\Importer;
@@ -22,6 +23,9 @@ use WM\Warp\Database\RowCodec;
 use WM\Warp\Database\RowTransformer;
 use WM\Warp\Database\Schema;
 use WM\Warp\Database\TableInfo;
+use WM\Warp\Files\Groups;
+use WM\Warp\Files\Items;
+use WM\Warp\Files\Stager;
 use WM\Warp\Sites\Connection;
 use WM\Warp\Sites\ConnectionStore;
 use WM\Warp\Sites\Connector;
@@ -29,11 +33,14 @@ use WM\Warp\Sites\SiteIdentity;
 use WM\Warp\Support\Storage;
 
 /**
- * Drives a pull or push of the database on the site where it was started.
+ * Drives a pull or push of the database and files on the site where it was started.
  *
  * The browser calls step() repeatedly; every step works for a few seconds and saves the state to a file
  * (it survives replacing the database). Rows are read in chunks whose size adapts to how long a chunk
- * takes. Find & replace runs here, on the site that started the migration (1.7).
+ * takes. Find & replace runs here, on the site that started the migration (1.7). Files (FileRun) are
+ * prepared next to the live ones; files and tables are swapped in only in the last step.
+ *
+ * Phases: prepare → tables → files → swap → finish.
  */
 final class Runner {
 
@@ -95,16 +102,19 @@ final class Runner {
 	 *
 	 * @param Connection    $connection Other site.
 	 * @param string        $direction  self::PULL or self::PUSH.
+	 * @param bool          $database   Whether to migrate the database.
 	 * @param string        $mode       Table selection (Schema::MODE_*).
 	 * @param string[]      $selected   Chosen tables (names on the source).
 	 * @phpstan-param list<string> $selected
 	 * @param bool          $protocol   Whether to apply the protocol rule.
 	 * @param ReplaceRule[] $custom     Custom find & replace rules.
 	 * @phpstan-param list<ReplaceRule> $custom
+	 * @param array         $files      File groups from the form: group, mode, selected, since, excludes, allow_php.
+	 * @phpstan-param list<array{group: string, mode: string, selected: list<string>, since: int, excludes: list<string>, allow_php: bool}> $files
 	 * @return array<string, mixed> State.
-	 * @throws \RuntimeException When another migration is running.
+	 * @throws \RuntimeException When another migration is running or nothing is chosen.
 	 */
-	public function start( Connection $connection, string $direction, string $mode, array $selected, bool $protocol, array $custom ): array {
+	public function start( Connection $connection, string $direction, bool $database, string $mode, array $selected, bool $protocol, array $custom, array $files = array() ): array {
 		$previous = self::current();
 
 		if ( null !== $previous && self::RUNNING === $previous['status'] && time() - (int) $previous['updated'] < 120 ) {
@@ -131,9 +141,18 @@ final class Runner {
 			$custom
 		);
 
+		$jobs = $this->jobs( $connection, $direction, $files );
+
+		if ( ! $database && array() === $jobs ) {
+			throw new \RuntimeException( __( 'Choose what to migrate: the database, media, themes or plugins.', 'wm-warp' ) );
+		}
+
 		$state = array(
 			'id'            => bin2hex( random_bytes( 16 ) ),
 			'direction'     => self::PULL === $direction ? self::PULL : self::PUSH,
+			'database'      => $database,
+			'files'         => array() === $jobs ? null : FileRun::initial( $jobs ),
+			'target_os'     => self::text( $target, 'os' ),
 			'connection'    => $connection->id,
 			'site'          => $connection->name,
 			'host'          => $connection->host(),
@@ -187,6 +206,20 @@ final class Runner {
 					$state = $this->transfer( $state );
 					$this->save( $state );
 				} while ( 'tables' === $state['phase'] && microtime( true ) < $deadline );
+			} elseif ( 'files' === $state['phase'] ) {
+				$state = $this->file_run( $state )->work( $state, $deadline, fn( array $current ) => $this->save( $current ) );
+				if ( 'swap' === $state['files']['step'] ) {
+					$state['phase'] = 'swap';
+				}
+			} elseif ( 'swap' === $state['phase'] ) {
+				do {
+					$state['files'] = $this->file_run( $state )->swap( $state['files'] );
+					$this->save( $state );
+				} while ( 'swapped' !== $state['files']['step'] && microtime( true ) < $deadline );
+
+				if ( 'swapped' === $state['files']['step'] ) {
+					$state['phase'] = 'finish';
+				}
 			} elseif ( 'finish' === $state['phase'] ) {
 				$state = $this->finish( $state );
 			}
@@ -212,6 +245,7 @@ final class Runner {
 
 		if ( self::RUNNING === $state['status'] ) {
 			$this->abort_target( $state );
+			FileRun::cleanup();
 			$state['status']   = self::CANCELLED;
 			$state['finished'] = time();
 			$this->save( $state );
@@ -221,7 +255,7 @@ final class Runner {
 	}
 
 	/**
-	 * Confirms the finished migration: the set-aside tables on the target are deleted.
+	 * Confirms the finished migration: the set-aside tables and files on the target are deleted.
 	 *
 	 * @return array<string, mixed> State.
 	 * @throws \RuntimeException When there is no migration.
@@ -232,9 +266,9 @@ final class Runner {
 
 		if ( self::DONE === $state['status'] ) {
 			if ( self::PULL === $state['direction'] ) {
-				Importer::confirm();
+				Target::confirm();
 			} else {
-				$this->remote( $state, 'db/confirm', array( 'run_id' => $state['id'] ) );
+				$this->remote( $state, 'run/confirm', array( 'run_id' => $state['id'] ) );
 			}
 
 			$state['status'] = self::CONFIRMED;
@@ -245,7 +279,7 @@ final class Runner {
 	}
 
 	/**
-	 * Undoes the finished migration: the target gets its previous tables back.
+	 * Undoes the finished migration: the target gets its previous tables and files back.
 	 *
 	 * @return array<string, mixed> State.
 	 * @throws \RuntimeException When there is no migration.
@@ -256,9 +290,9 @@ final class Runner {
 
 		if ( self::DONE === $state['status'] ) {
 			if ( self::PULL === $state['direction'] ) {
-				Importer::rollback();
+				Target::rollback();
 			} else {
-				$this->remote( $state, 'db/rollback', array( 'run_id' => $state['id'] ) );
+				$this->remote( $state, 'run/rollback', array( 'run_id' => $state['id'] ) );
 			}
 
 			$state['status'] = self::ROLLED_BACK;
@@ -269,13 +303,46 @@ final class Runner {
 	}
 
 	/**
+	 * Prepares the target: staging folders for files, temporary tables for the database.
+	 *
+	 * @param array<string, mixed> $state State.
+	 * @return array<string, mixed>
+	 */
+	private function prepare( array $state ): array {
+		if ( self::PULL === $state['direction'] ) {
+			Target::settle( (string) $state['id'] );
+		}
+
+		if ( is_array( $state['files'] ) ) {
+			$begun                  = $this->sides( $state )[1](
+				'files/begin',
+				array(
+					'run_id' => $state['id'],
+					'groups' => FileRun::groups( $state['files'] ),
+				),
+				'',
+				true
+			);
+			$state['files']['free'] = is_array( $begun['data']['free'] ?? null ) ? $begun['data']['free'] : array();
+		}
+
+		if ( true !== $state['database'] ) {
+			$state['phase'] = is_array( $state['files'] ) ? 'files' : 'finish';
+
+			return $state;
+		}
+
+		return $this->prepare_tables( $state );
+	}
+
+	/**
 	 * Lists the tables on the source and creates temporary tables on the target.
 	 *
 	 * @param array<string, mixed> $state State.
 	 * @return array<string, mixed>
 	 * @throws \RuntimeException When no table is chosen.
 	 */
-	private function prepare( array $state ): array {
+	private function prepare_tables( array $state ): array {
 		$selected = array_values( array_filter( (array) $state['selected'], 'is_string' ) );
 
 		if ( self::PULL === $state['direction'] ) {
@@ -335,7 +402,7 @@ final class Runner {
 		$index = (int) $state['index'];
 
 		if ( ! isset( $state['tables'][ $index ] ) ) {
-			$state['phase'] = 'finish';
+			$state['phase'] = is_array( $state['files'] ) ? 'files' : 'finish';
 
 			return $state;
 		}
@@ -402,19 +469,38 @@ final class Runner {
 		}
 
 		if ( ! isset( $state['tables'][ (int) $state['index'] ] ) ) {
-			$state['phase'] = 'finish';
+			$state['phase'] = is_array( $state['files'] ) ? 'files' : 'finish';
 		}
 
 		return $state;
 	}
 
 	/**
-	 * Checks row counts on the target and swaps the tables.
+	 * Checks row counts on the target and swaps the tables (the files are already swapped).
 	 *
 	 * @param array<string, mixed> $state State.
 	 * @return array<string, mixed>
 	 */
 	private function finish( array $state ): array {
+		$summary = true === $state['database'] ? $this->finish_tables( $state ) : null;
+
+		FileRun::cleanup();
+
+		$state['status']   = self::DONE;
+		$state['phase']    = 'done';
+		$state['finished'] = time();
+		$state['summary']  = $summary;
+
+		return $state;
+	}
+
+	/**
+	 * Swaps the tables on the target.
+	 *
+	 * @param array<string, mixed> $state State.
+	 * @return array<string, mixed> Summary.
+	 */
+	private function finish_tables( array $state ): array {
 		$expected = array();
 		foreach ( $state['tables'] as $entry ) {
 			$expected[ (string) $entry['info']['name'] ] = (int) $entry['rows'];
@@ -435,12 +521,7 @@ final class Runner {
 			)['data'];
 		}
 
-		$state['status']   = self::DONE;
-		$state['phase']    = 'done';
-		$state['finished'] = time();
-		$state['summary']  = $summary;
-
-		return $state;
+		return $summary;
 	}
 
 	/**
@@ -453,7 +534,7 @@ final class Runner {
 	private function retry_or_fail( array $state, ClientError $error ): array {
 		$transient = in_array( $error->reason, array( 'timeout', 'too_large', 'remote_error', 'unreachable', 'bad_response' ), true );
 
-		if ( 'tables' === $state['phase'] && $transient && (int) $state['retries'] < self::MAX_RETRIES ) {
+		if ( in_array( $state['phase'], array( 'tables', 'files', 'swap' ), true ) && $transient && (int) $state['retries'] < self::MAX_RETRIES ) {
 			++$state['retries'];
 			$state['budget'] = max( self::MIN_BUDGET, intdiv( (int) $state['budget'], 4 ) );
 
@@ -479,7 +560,7 @@ final class Runner {
 			$details['sql'] = $error->sql;
 		}
 
-		$table = $state['tables'][ (int) $state['index'] ]['info']['name'] ?? '';
+		$table = 'tables' === $state['phase'] ? ( $state['tables'][ (int) $state['index'] ]['info']['name'] ?? '' ) : '';
 
 		$state['status']   = self::FAILED;
 		$state['finished'] = time();
@@ -491,6 +572,7 @@ final class Runner {
 		);
 
 		$this->abort_target( $state );
+		FileRun::cleanup();
 
 		return $state;
 	}
@@ -510,16 +592,17 @@ final class Runner {
 	}
 
 	/**
-	 * Removes the temporary tables on the target (best effort).
+	 * Removes the temporary tables and staged files on the target and puts back files already swapped
+	 * by this run (best effort).
 	 *
 	 * @param array<string, mixed> $state State.
 	 */
 	private function abort_target( array $state ): void {
 		try {
 			if ( self::PULL === $state['direction'] ) {
-				Importer::abort( (string) $state['id'] );
+				Target::abort( (string) $state['id'] );
 			} else {
-				$this->remote( $state, 'db/abort', array( 'run_id' => $state['id'] ) );
+				$this->remote( $state, 'run/abort', array( 'run_id' => $state['id'] ) );
 			}
 		} catch ( \Throwable $error ) {
 			unset( $error );
@@ -534,17 +617,150 @@ final class Runner {
 	 * @param array<string, mixed> $data    Data.
 	 * @param string               $payload Binary payload.
 	 * @param int                  $timeout Timeout in seconds.
+	 * @param bool                 $deflate Compress the request body.
 	 * @return array{data: array<string, mixed>, payload: string}
 	 * @throws ClientError When the request fails.
 	 */
-	private function remote( array $state, string $action, array $data, string $payload = '', int $timeout = 120 ): array {
+	private function remote( array $state, string $action, array $data, string $payload = '', int $timeout = 120, bool $deflate = true ): array {
 		$connection = $this->outgoing->get( (string) $state['connection'] );
 
 		if ( null === $connection ) {
 			throw new ClientError( 'revoked', __( 'The site of this migration is no longer connected.', 'wm-warp' ) );
 		}
 
-		return ( new Client( $this->identity->site_id() ) )->exchange( Endpoint::of( $connection ), $action, $data, $connection->secret, $connection->id, $connection->site_id, $payload, $timeout );
+		return ( new Client( $this->identity->site_id() ) )->exchange( Endpoint::of( $connection ), $action, $data, $connection->secret, $connection->id, $connection->site_id, $payload, $timeout, $deflate );
+	}
+
+	/**
+	 * Source and target of the run as callables: this site directly, the other site by request.
+	 *
+	 * @param array<string, mixed> $state State.
+	 * @return array{0: \Closure(string, array<string, mixed>, string, bool): array{data: array<string, mixed>, payload: string}, 1: \Closure(string, array<string, mixed>, string, bool): array{data: array<string, mixed>, payload: string}}
+	 */
+	private function sides( array $state ): array {
+		$peer   = (string) $state['site'];
+		$local  = static function ( string $route, array $data, string $payload, bool $deflate ) use ( $peer ): array {
+			unset( $deflate );
+			$result = FileRoutes::handle( $route, $data, $payload, $peer );
+
+			return array(
+				'data'    => $result['data'],
+				'payload' => $result['payload'],
+			);
+		};
+		$remote = fn( string $route, array $data, string $payload, bool $deflate ): array => $this->remote( $state, $route, $data, $payload, 120, $deflate );
+
+		return self::PULL === $state['direction'] ? array( $remote, $local ) : array( $local, $remote );
+	}
+
+	/**
+	 * File part of the run.
+	 *
+	 * @param array<string, mixed> $state State.
+	 */
+	private function file_run( array $state ): FileRun {
+		[ $source, $target ] = $this->sides( $state );
+
+		return new FileRun(
+			$source,
+			$target,
+			(string) $state['id'],
+			self::PULL === $state['direction'] ? (string) wp_parse_url( home_url(), PHP_URL_HOST ) : (string) $state['host'],
+			self::PULL === $state['direction'] ? PHP_OS_FAMILY : (string) $state['target_os']
+		);
+	}
+
+	/**
+	 * File jobs from the form: plugins and themes are resolved to items of the source.
+	 *
+	 * @param Connection $connection Other site.
+	 * @param string     $direction  Direction.
+	 * @param array      $files      File groups from the form.
+	 * @phpstan-param list<array{group: string, mode: string, selected: list<string>, since: int, excludes: list<string>, allow_php: bool}> $files
+	 * @return list<array<string, mixed>>
+	 * @throws \RuntimeException When a selection is empty.
+	 */
+	private function jobs( Connection $connection, string $direction, array $files ): array {
+		$jobs   = array();
+		$source = null;
+
+		foreach ( $files as $spec ) {
+			$job = array(
+				'group'     => $spec['group'],
+				'mode'      => Stager::MODE_FILES,
+				'items'     => array(),
+				'mirror'    => false,
+				'since'     => 0,
+				'excludes'  => $spec['excludes'],
+				'allow_php' => Groups::UPLOADS === $spec['group'] && $spec['allow_php'],
+			);
+
+			if ( Groups::UPLOADS === $spec['group'] ) {
+				$job['mirror'] = 'mirror' === $spec['mode'];
+				$job['since']  = 'since' === $spec['mode'] ? $spec['since'] : 0;
+				$jobs[]        = $job;
+				continue;
+			}
+
+			if ( null === $source ) {
+				$source = self::PULL === $direction
+					? ( new Client( $this->identity->site_id() ) )->send( Endpoint::of( $connection ), 'files/items', array(), $connection->secret, $connection->id, $connection->site_id )
+					: array(
+						Groups::PLUGINS => Items::plugins(),
+						Groups::THEMES  => Items::themes(),
+					);
+			}
+
+			$items = self::choose_items( (array) ( $source[ $spec['group'] ] ?? array() ), $spec['mode'], $spec['selected'] );
+
+			if ( array() === $items ) {
+				throw new \RuntimeException(
+					Groups::PLUGINS === $spec['group']
+						? __( 'No plugin is chosen. Choose plugins or uncheck Plugins.', 'wm-warp' )
+						: __( 'No theme is chosen. Choose themes or uncheck Themes.', 'wm-warp' )
+				);
+			}
+
+			$job['mode']  = Stager::MODE_ITEMS;
+			$job['items'] = $items;
+			$jobs[]       = $job;
+		}
+
+		return $jobs;
+	}
+
+	/**
+	 * Plugins or themes of the source chosen by a mode.
+	 *
+	 * @param array    $items    Items of the source (Items::plugins() or Items::themes()).
+	 * @phpstan-param array<mixed> $items
+	 * @param string   $mode     all, active, selected or except.
+	 * @param string[] $selected Chosen items.
+	 * @phpstan-param list<string> $selected
+	 * @return list<string>
+	 */
+	public static function choose_items( array $items, string $mode, array $selected ): array {
+		$chosen = array();
+
+		foreach ( $items as $item ) {
+			if ( ! is_array( $item ) || ! is_string( $item['item'] ?? null ) || true === ( $item['link'] ?? false ) ) {
+				continue;
+			}
+
+			$name = $item['item'];
+			$take = match ( $mode ) {
+				'active'   => true === ( $item['active'] ?? false ),
+				'selected' => in_array( $name, $selected, true ),
+				'except'   => ! in_array( $name, $selected, true ),
+				default    => true,
+			};
+
+			if ( $take ) {
+				$chosen[] = $name;
+			}
+		}
+
+		return $chosen;
 	}
 
 	/**
