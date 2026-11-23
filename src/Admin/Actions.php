@@ -10,6 +10,8 @@ declare(strict_types=1);
 namespace WM\Warp\Admin;
 
 use WM\Warp\Api\ClientError;
+use WM\Warp\Database\Importer;
+use WM\Warp\Migration\Runner;
 use WM\Warp\Sites\ConnectionStore;
 use WM\Warp\Sites\Connector;
 use WM\Warp\Sites\SiteIdentity;
@@ -25,6 +27,7 @@ final class Actions {
 	public const DISCONNECT  = 'wm_warp_disconnect';
 	public const REGENERATE  = 'wm_warp_regenerate_key';
 	public const REMOVE_PEER = 'wm_warp_remove_peer';
+	public const PENDING     = 'wm_warp_pending';
 
 	/**
 	 * Constructor.
@@ -49,6 +52,44 @@ final class Actions {
 		add_action( 'admin_post_' . self::DISCONNECT, array( $this, 'disconnect' ) );
 		add_action( 'admin_post_' . self::REGENERATE, array( $this, 'regenerate' ) );
 		add_action( 'admin_post_' . self::REMOVE_PEER, array( $this, 'remove_peer' ) );
+		add_action( 'admin_post_' . self::PENDING, array( $this, 'pending' ) );
+	}
+
+	/**
+	 * Confirms or undoes a migration waiting for confirmation (notice on the admin page).
+	 *
+	 * "run" is a migration started on this site, "import" one another site pushed here.
+	 */
+	public function pending(): void {
+		$this->guard( self::PENDING );
+
+		$command = self::post( 'command' );
+		$login   = wp_get_current_user()->user_login;
+
+		if ( ! in_array( $command, array( 'confirm', 'rollback' ), true ) ) {
+			$this->flash->set( 'error', __( 'Unknown command.', 'wm-warp' ) );
+			$this->redirect();
+		}
+
+		try {
+			if ( 'run' === self::post( 'scope' ) ) {
+				$runner = new Runner( $this->identity, $this->outgoing );
+				'rollback' === $command ? $runner->rollback() : $runner->confirm();
+			} else {
+				'rollback' === $command ? Importer::rollback() : Importer::confirm();
+			}
+		} catch ( \Throwable $error ) {
+			$this->flash->set( 'error', $error->getMessage() );
+			$this->redirect();
+		}
+
+		if ( 'rollback' === $command ) {
+			// The users table may have changed back; keep the same user logged in.
+			MigrationAjax::log_in_again( $login );
+		}
+
+		$this->flash->set( 'success', 'rollback' === $command ? __( 'The migration was undone; the previous tables are back.', 'wm-warp' ) : __( 'The migration is confirmed.', 'wm-warp' ) );
+		$this->redirect();
 	}
 
 	/**

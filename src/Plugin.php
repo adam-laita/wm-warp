@@ -12,6 +12,7 @@ namespace WM\Warp;
 use WM\Warp\Admin\Actions;
 use WM\Warp\Admin\AdminPage;
 use WM\Warp\Admin\Flash;
+use WM\Warp\Admin\MigrationAjax;
 use WM\Warp\Api\RestController;
 use WM\Warp\Security\Vault;
 use WM\Warp\Sites\ConnectionStore;
@@ -63,7 +64,10 @@ final class Plugin {
 			$flash = new Flash( $vault );
 			( new AdminPage( $identity, $outgoing, $incoming, $flash ) )->register();
 			( new Actions( $identity, $outgoing, $incoming, $flash ) )->register();
+			( new MigrationAjax( $identity, $outgoing ) )->register();
 		}
+
+		Maintenance::register();
 	}
 
 	/**

@@ -48,14 +48,32 @@ final class Client {
 	 * @throws ClientError When the request fails.
 	 */
 	public function send( Endpoint $endpoint, string $action, array $data, string $secret, string $connection_id, string $site_id ): array {
-		$body     = Envelope::seal( $data, $secret, Envelope::REQUEST );
+		return $this->exchange( $endpoint, $action, $data, $secret, $connection_id, $site_id )['data'];
+	}
+
+	/**
+	 * Sends a request with an optional binary payload and returns the decrypted response with its payload.
+	 *
+	 * @param Endpoint             $endpoint      Where to send it.
+	 * @param string               $action        Route below the namespace.
+	 * @param array<string, mixed> $data          Request data.
+	 * @param string               $secret        Pairing or connection secret.
+	 * @param string               $connection_id Connection ID, or Protocol::PAIRING_CONNECTION.
+	 * @param string               $site_id       Expected ID of the other site.
+	 * @param string               $payload       Binary payload (table rows), empty for none.
+	 * @param int                  $timeout       Timeout in seconds.
+	 * @return array{data: array<string, mixed>, payload: string}
+	 * @throws ClientError When the request fails.
+	 */
+	public function exchange( Endpoint $endpoint, string $action, array $data, string $secret, string $connection_id, string $site_id, string $payload = '', int $timeout = self::TIMEOUT ): array {
+		$body     = Envelope::seal( $data, $secret, Envelope::REQUEST, $payload );
 		$route    = '/' . Protocol::REST_NAMESPACE . '/' . $action;
-		$response = $this->post( $endpoint, $action, $route, $body, $secret, $connection_id, 0 );
+		$response = $this->post( $endpoint, $action, $route, $body, $secret, $connection_id, 0, $timeout );
 
 		// The clocks of the two servers differ; retry once with the other server's time.
 		$server_time = $this->clock_skew( $response );
 		if ( null !== $server_time ) {
-			$response = $this->post( $endpoint, $action, $route, $body, $secret, $connection_id, $server_time - time() );
+			$response = $this->post( $endpoint, $action, $route, $body, $secret, $connection_id, $server_time - time(), $timeout );
 		}
 
 		return $this->read( $response, $endpoint, $secret, $connection_id, $site_id );
@@ -71,9 +89,10 @@ final class Client {
 	 * @param string   $secret        Secret.
 	 * @param string   $connection_id Connection ID.
 	 * @param int      $offset        Clock offset in seconds.
+	 * @param int      $timeout       Timeout in seconds.
 	 * @return array<string, mixed>|\WP_Error
 	 */
-	private function post( Endpoint $endpoint, string $action, string $route, string $body, string $secret, string $connection_id, int $offset ): array|\WP_Error {
+	private function post( Endpoint $endpoint, string $action, string $route, string $body, string $secret, string $connection_id, int $offset, int $timeout ): array|\WP_Error {
 		$time  = time() + $offset;
 		$nonce = Base64Url::encode( random_bytes( 18 ) );
 
@@ -100,7 +119,7 @@ final class Client {
 			array(
 				'headers'     => $headers,
 				'body'        => $body,
-				'timeout'     => self::TIMEOUT,
+				'timeout'     => $timeout,
 				'redirection' => 0,
 				'sslverify'   => $endpoint->verify_tls,
 				'user-agent'  => 'WM-Warp/' . \WM\Warp\VERSION,
@@ -170,7 +189,7 @@ final class Client {
 	 * @param string                         $secret        Secret.
 	 * @param string                         $connection_id Connection ID.
 	 * @param string                         $site_id       Expected ID of the other site.
-	 * @return array<string, mixed>
+	 * @return array{data: array<string, mixed>, payload: string}
 	 * @throws ClientError When the request failed.
 	 */
 	private function read( array|\WP_Error $response, Endpoint $endpoint, string $secret, string $connection_id, string $site_id ): array {
@@ -207,7 +226,7 @@ final class Client {
 		}
 
 		if ( $status >= 200 && $status < 300 ) {
-			$data = Envelope::open( $body, $secret, Envelope::RESPONSE );
+			$data = Envelope::open_with_payload( $body, $secret, Envelope::RESPONSE );
 
 			if ( null === $data ) {
 				throw new ClientError(
@@ -331,6 +350,22 @@ final class Client {
 
 		if ( in_array( $code, array( 'rest_not_logged_in', 'rest_forbidden', 'rest_cannot_access', 'rest_login_required', 'rest_authentication_required' ), true ) ) {
 			return new ClientError( 'rest_locked', __( 'The REST API of the other site is open only to logged-in users (a plugin or setting restricts it), or Warp is not active there. Check that Warp is active and allow the wm-warp/v1 namespace in that plugin.', 'wm-warp' ), '', $details );
+		}
+
+		if ( 413 === $status ) {
+			return new ClientError( 'too_large', __( 'The other site refused a request because it is too large (HTTP 413). Increase the upload limits of its server (post_max_size, client_max_body_size) or contact the hosting.', 'wm-warp' ), '', $details );
+		}
+
+		if ( str_starts_with( $code, 'wm_warp_migration' ) ) {
+			$message = isset( $json['message'] ) && is_string( $json['message'] ) ? $json['message'] : '';
+
+			return new ClientError(
+				'migration',
+				/* translators: %s: technical error from the other site. */
+				sprintf( __( 'The migration failed on the other site: %s', 'wm-warp' ), '' !== $message ? $message : $code ),
+				'',
+				$details
+			);
 		}
 
 		if ( 'wm_warp_storage' === $code ) {

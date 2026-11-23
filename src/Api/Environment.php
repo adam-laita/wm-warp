@@ -33,6 +33,7 @@ final class Environment {
 			'site_id'     => $site_id,
 			'name'        => get_bloginfo( 'name' ),
 			'home'        => home_url(),
+			'path'        => untrailingslashit( ABSPATH ),
 			'wp'          => get_bloginfo( 'version' ),
 			'php'         => PHP_VERSION,
 			'db'          => (string) $wpdb->db_server_info(),

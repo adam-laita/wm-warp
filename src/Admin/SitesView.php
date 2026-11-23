@@ -75,6 +75,32 @@ final class SitesView {
 					</td>
 					<td><?php echo esc_html( AdminPage::date( $connection->created ) ); ?></td>
 					<td class="wm-warp__actions">
+						<a class="button button-primary" href="
+						<?php
+						echo esc_url(
+							AdminPage::url(
+								array(
+									'view'       => 'migrate',
+									'connection' => $connection->id,
+									'direction'  => 'pull',
+								)
+							)
+						);
+						?>
+																"><?php esc_html_e( 'Pull', 'wm-warp' ); ?></a>
+						<a class="button" href="
+						<?php
+						echo esc_url(
+							AdminPage::url(
+								array(
+									'view'       => 'migrate',
+									'connection' => $connection->id,
+									'direction'  => 'push',
+								)
+							)
+						);
+						?>
+												"><?php esc_html_e( 'Push', 'wm-warp' ); ?></a>
 						<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" data-wm-warp-confirm="<?php echo esc_attr( sprintf( /* translators: %s: name of the site. */ __( 'Disconnect %s? To connect it again you will need its key.', 'wm-warp' ), $connection->name ) ); ?>">
 							<input type="hidden" name="action" value="<?php echo esc_attr( Actions::DISCONNECT ); ?>">
 							<input type="hidden" name="connection" value="<?php echo esc_attr( $connection->id ); ?>">

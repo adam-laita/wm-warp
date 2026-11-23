@@ -22,6 +22,18 @@ msgstr ""
 msgid "WebManiak"
 msgstr ""
 
+#: src/Admin/Actions.php src/Admin/MigrationAjax.php
+msgid "Unknown command."
+msgstr ""
+
+#: src/Admin/Actions.php src/Admin/MigrationView.php
+msgid "The migration was undone; the previous tables are back."
+msgstr ""
+
+#: src/Admin/Actions.php src/Admin/MigrationView.php
+msgid "The migration is confirmed."
+msgstr ""
+
 #. translators: %s: name of the connected site.
 #: src/Admin/Actions.php
 msgid "The site %s is connected."
@@ -68,6 +80,264 @@ msgstr ""
 
 #: src/Admin/AdminPage.php
 msgid "Warp sections"
+msgstr ""
+
+#. translators: 1: domain of the other site, 2: date and time.
+#: src/Admin/AdminPage.php
+msgid "The pull from %1$s (%2$s) waits for confirmation. The previous tables of this site are kept aside until then."
+msgstr ""
+
+#. translators: 1: domain of the other site, 2: date and time.
+#: src/Admin/AdminPage.php
+msgid "The push to %1$s (%2$s) waits for confirmation. The previous tables of that site are kept aside until then."
+msgstr ""
+
+#. translators: 1: name of the other site, 2: date and time.
+#: src/Admin/AdminPage.php
+msgid "The migration from %1$s (%2$s) waits for confirmation. The previous tables of this site are kept aside until then."
+msgstr ""
+
+#: src/Admin/AdminPage.php src/Admin/MigrationView.php
+msgid "Confirm"
+msgstr ""
+
+#: src/Admin/AdminPage.php src/Admin/MigrationView.php
+msgid "Undo"
+msgstr ""
+
+#: src/Admin/MigrationAjax.php
+msgid "Your session has expired. Reload the page."
+msgstr ""
+
+#: src/Admin/MigrationAjax.php
+msgid "The site is no longer connected."
+msgstr ""
+
+#: src/Admin/MigrationAjax.php
+msgid "Choose at least one table."
+msgstr ""
+
+#. translators: %s: regular expression entered by the user.
+#: src/Admin/MigrationAjax.php
+msgid "The regular expression %s is not valid. Write it with delimiters, e.g. /old-(\\d+)/."
+msgstr ""
+
+#. translators: %s: table name.
+#: src/Admin/MigrationAjax.php
+msgid "Table %s"
+msgstr ""
+
+#: src/Admin/MigrationAjax.php
+msgid "Preparing tables…"
+msgstr ""
+
+#. translators: 1: table name, 2: number of the table, 3: number of tables.
+#: src/Admin/MigrationAjax.php
+msgid "Transferring %1$s (%2$d of %3$d)"
+msgstr ""
+
+#: src/Admin/MigrationAjax.php
+msgid "Checking the data and replacing the tables…"
+msgstr ""
+
+#. translators: 1: data size, 2: duration, 3: speed per second.
+#: src/Admin/MigrationAjax.php
+msgid "%1$s in %2$s (%3$s/s)"
+msgstr ""
+
+#. translators: 1: data size, 2: duration, 3: number of tables, 4: number of rows.
+#: src/Admin/MigrationAjax.php
+msgid "Transferred %1$s in %2$s: %3$s tables, %4$s rows."
+msgstr ""
+
+#. translators: 1: collation of the source, 2: collation used instead.
+#: src/Admin/MigrationAjax.php
+msgid "The target does not know the collation %1$s, %2$s is used instead."
+msgstr ""
+
+#. translators: %d: seconds.
+#: src/Admin/MigrationAjax.php
+msgid "%d s"
+msgstr ""
+
+#. translators: 1: minutes, 2: seconds.
+#: src/Admin/MigrationAjax.php
+msgid "%1$d min %2$d s"
+msgstr ""
+
+#: src/Admin/MigrationView.php
+msgid "The migration is still running. Leaving the page stops it."
+msgstr ""
+
+#. translators: %s: domain of the other site.
+#: src/Admin/MigrationView.php
+msgid "Pull from %s"
+msgstr ""
+
+#. translators: %s: domain of the other site.
+#: src/Admin/MigrationView.php
+msgid "Push to %s"
+msgstr ""
+
+#: src/Admin/MigrationView.php
+msgid "Switch to Push"
+msgstr ""
+
+#: src/Admin/MigrationView.php
+msgid "Switch to Pull"
+msgstr ""
+
+#. translators: %s: domain of the other site.
+#: src/Admin/MigrationView.php
+msgid "The database of this site will be replaced with the data of %s."
+msgstr ""
+
+#. translators: %s: domain of the other site.
+#: src/Admin/MigrationView.php
+msgid "The database of %s will be replaced with the data of this site."
+msgstr ""
+
+#: src/Admin/MigrationView.php
+msgid "Back to sites"
+msgstr ""
+
+#: src/Admin/MigrationView.php
+msgid "Database"
+msgstr ""
+
+#. translators: 1: table prefix, 2: number of tables.
+#: src/Admin/MigrationView.php
+msgid "All tables with the prefix %1$s (%2$d)"
+msgstr ""
+
+#. translators: %d: number of tables.
+#: src/Admin/MigrationView.php
+msgid "All tables in the database (%d)"
+msgstr ""
+
+#: src/Admin/MigrationView.php
+msgid "Only selected tables"
+msgstr ""
+
+#: src/Admin/MigrationView.php
+msgid "Tables"
+msgstr ""
+
+#: src/Admin/MigrationView.php
+msgid "Hold Ctrl (Cmd on a Mac) to select more tables."
+msgstr ""
+
+#: src/Admin/MigrationView.php
+msgid "Find & replace"
+msgstr ""
+
+#: src/Admin/MigrationView.php
+msgid "Addresses and paths of the source are replaced with those of the target, also inside serialized data and JSON. Binary data are never changed."
+msgstr ""
+
+#: src/Admin/MigrationView.php
+msgid "Find"
+msgstr ""
+
+#: src/Admin/MigrationView.php
+msgid "Replace with"
+msgstr ""
+
+#: src/Admin/MigrationView.php
+msgid "Options"
+msgstr ""
+
+#: src/Admin/MigrationView.php
+msgid "Both sites have the same address and path; nothing needs to be replaced."
+msgstr ""
+
+#: src/Admin/MigrationView.php
+msgid "automatic"
+msgstr ""
+
+#: src/Admin/MigrationView.php
+msgid "Convert to HTTPS"
+msgstr ""
+
+#: src/Admin/MigrationView.php
+msgid "Convert to HTTP"
+msgstr ""
+
+#: src/Admin/MigrationView.php
+msgid "Match case: upper and lower case letters must match exactly. Off: “Warp” also finds “warp”."
+msgstr ""
+
+#: src/Admin/MigrationView.php
+msgid "Match case"
+msgstr ""
+
+#: src/Admin/MigrationView.php
+msgid "Regular expression with delimiters, e.g. /old-(\\d+)/; use $1 in the replacement for the matched group."
+msgstr ""
+
+#: src/Admin/MigrationView.php
+msgid "Regular expression"
+msgstr ""
+
+#: src/Admin/MigrationView.php src/Admin/SettingsView.php
+msgid "Remove"
+msgstr ""
+
+#: src/Admin/MigrationView.php
+msgid "Add a row"
+msgstr ""
+
+#: src/Admin/MigrationView.php src/Admin/SitesView.php
+msgid "Pull"
+msgstr ""
+
+#: src/Admin/MigrationView.php src/Admin/SitesView.php
+msgid "Push"
+msgstr ""
+
+#: src/Admin/MigrationView.php src/Admin/SitesView.php
+msgid "Cancel"
+msgstr ""
+
+#: src/Admin/MigrationView.php
+msgid "Cancel the migration"
+msgstr ""
+
+#: src/Admin/MigrationView.php
+msgid "Done, check the site"
+msgstr ""
+
+#: src/Admin/MigrationView.php
+msgid "The previous tables of this site are kept aside. Confirm to delete them, or undo to get the previous state back. The migration is confirmed automatically after 7 days or with the next migration."
+msgstr ""
+
+#. translators: %s: domain of the other site.
+#: src/Admin/MigrationView.php
+msgid "The previous tables of %s are kept aside. Confirm to delete them, or undo to get the previous state back. The migration is confirmed automatically after 7 days or with the next migration."
+msgstr ""
+
+#: src/Admin/MigrationView.php
+msgid "Open the site"
+msgstr ""
+
+#: src/Admin/MigrationView.php
+msgid "Undo the migration and restore the previous tables?"
+msgstr ""
+
+#: src/Admin/MigrationView.php
+msgid "Your user account does not exist in the pulled database, so you were logged out. Log in with an account of the pulled site to confirm or undo the migration."
+msgstr ""
+
+#: src/Admin/MigrationView.php
+msgid "The migration was cancelled; the target was not changed."
+msgstr ""
+
+#: src/Admin/MigrationView.php
+msgid "The migration failed. The target was not changed."
+msgstr ""
+
+#: src/Admin/MigrationView.php
+msgid "Technical details"
 msgstr ""
 
 #: src/Admin/SettingsView.php
@@ -121,10 +391,6 @@ msgstr ""
 #. translators: %s: name of the site.
 #: src/Admin/SettingsView.php
 msgid "Remove %s? It will no longer be able to pull from or push to this site."
-msgstr ""
-
-#: src/Admin/SettingsView.php
-msgid "Remove"
 msgstr ""
 
 #: src/Admin/SettingsView.php
@@ -225,10 +491,6 @@ msgstr ""
 msgid "Connect"
 msgstr ""
 
-#: src/Admin/SitesView.php
-msgid "Cancel"
-msgstr ""
-
 #: src/Api/Client.php
 msgid "The address of the other site leads back to this site. If you are moving a site to another hosting with the same domain, enter the IP address of the other server."
 msgstr ""
@@ -299,6 +561,15 @@ msgid "The REST API of the other site is open only to logged-in users (a plugin 
 msgstr ""
 
 #: src/Api/Client.php
+msgid "The other site refused a request because it is too large (HTTP 413). Increase the upload limits of its server (post_max_size, client_max_body_size) or contact the hosting."
+msgstr ""
+
+#. translators: %s: technical error from the other site.
+#: src/Api/Client.php
+msgid "The migration failed on the other site: %s"
+msgstr ""
+
+#: src/Api/Client.php
 msgid "The other site cannot write to the folder wp-content/wm-warp. Check the folder permissions on its server."
 msgstr ""
 
@@ -317,6 +588,27 @@ msgstr ""
 #. translators: %d: HTTP status code.
 #: src/Api/Client.php
 msgid "The other site responded with an error (HTTP %d). Check its PHP error log."
+msgstr ""
+
+#: src/Migration/Runner.php
+msgid "Another migration is running on this site. Wait until it ends or cancel it."
+msgstr ""
+
+#: src/Migration/Runner.php
+msgid "No table is chosen for the migration."
+msgstr ""
+
+#. translators: %s: error reported by the database.
+#: src/Migration/Runner.php
+msgid "The database refused a statement: %s"
+msgstr ""
+
+#: src/Migration/Runner.php
+msgid "The site of this migration is no longer connected."
+msgstr ""
+
+#: src/Migration/Runner.php
+msgid "There is no migration on this site."
 msgstr ""
 
 #: src/Sites/Connector.php

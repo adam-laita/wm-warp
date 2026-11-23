@@ -79,6 +79,42 @@ final class RestController {
 				)
 			);
 		}
+
+		foreach ( DatabaseRoutes::ROUTES as $route ) {
+			register_rest_route(
+				Protocol::REST_NAMESPACE,
+				'/' . $route,
+				array(
+					'methods'             => 'POST',
+					'callback'            => fn( \WP_REST_Request $request ): \WP_REST_Response|\WP_Error => $this->migration( $request, $route ),
+					'permission_callback' => array( $this, 'authenticate' ),
+				)
+			);
+		}
+	}
+
+	/**
+	 * Migration request (database), handled by DatabaseRoutes.
+	 *
+	 * @param \WP_REST_Request $request Request.
+	 * @param string           $route   Route below the namespace.
+	 * @return \WP_REST_Response|\WP_Error
+	 */
+	public function migration( \WP_REST_Request $request, string $route ): \WP_REST_Response|\WP_Error {
+		$auth   = $this->verified_request( $request );
+		$opened = null === $auth ? null : Envelope::open_with_payload( $request->get_body(), $auth['secret'], Envelope::REQUEST );
+
+		if ( null === $auth || null === $auth['connection'] || null === $opened ) {
+			return new \WP_Error( 'wm_warp_bad_body', 'Invalid request body.', array( 'status' => 400 ) );
+		}
+
+		try {
+			$result = DatabaseRoutes::handle( $route, $opened['data'], $opened['payload'], $auth['connection'] );
+		} catch ( \Throwable $error ) {
+			return new \WP_Error( 'wm_warp_migration', $error->getMessage(), array( 'status' => 500 ) );
+		}
+
+		return new BinaryResponse( Envelope::seal( $result['data'], $auth['secret'], Envelope::RESPONSE, $result['payload'] ) );
 	}
 
 	/**

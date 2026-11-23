@@ -24,6 +24,18 @@ msgstr "Migrace a synchronizace dat mezi weby na WordPressu."
 msgid "WebManiak"
 msgstr "WebManiak"
 
+#: src/Admin/Actions.php src/Admin/MigrationAjax.php
+msgid "Unknown command."
+msgstr "Neznámý příkaz."
+
+#: src/Admin/Actions.php src/Admin/MigrationView.php
+msgid "The migration was undone; the previous tables are back."
+msgstr "Migrace je vrácená zpět, původní tabulky jsou zpět."
+
+#: src/Admin/Actions.php src/Admin/MigrationView.php
+msgid "The migration is confirmed."
+msgstr "Migrace je potvrzená."
+
 #. translators: %s: name of the connected site.
 #: src/Admin/Actions.php
 msgid "The site %s is connected."
@@ -71,6 +83,264 @@ msgstr "Pull a Push databáze a souborů mezi vašimi weby na WordPressu."
 #: src/Admin/AdminPage.php
 msgid "Warp sections"
 msgstr "Sekce Warpu"
+
+#. translators: 1: domain of the other site, 2: date and time.
+#: src/Admin/AdminPage.php
+msgid "The pull from %1$s (%2$s) waits for confirmation. The previous tables of this site are kept aside until then."
+msgstr "Pull z %1$s (%2$s) čeká na potvrzení. Do té doby jsou původní tabulky tohoto webu odložené stranou."
+
+#. translators: 1: domain of the other site, 2: date and time.
+#: src/Admin/AdminPage.php
+msgid "The push to %1$s (%2$s) waits for confirmation. The previous tables of that site are kept aside until then."
+msgstr "Push na %1$s (%2$s) čeká na potvrzení. Do té doby jsou původní tabulky toho webu odložené stranou."
+
+#. translators: 1: name of the other site, 2: date and time.
+#: src/Admin/AdminPage.php
+msgid "The migration from %1$s (%2$s) waits for confirmation. The previous tables of this site are kept aside until then."
+msgstr "Migrace z %1$s (%2$s) čeká na potvrzení. Do té doby jsou původní tabulky tohoto webu odložené stranou."
+
+#: src/Admin/AdminPage.php src/Admin/MigrationView.php
+msgid "Confirm"
+msgstr "Potvrdit"
+
+#: src/Admin/AdminPage.php src/Admin/MigrationView.php
+msgid "Undo"
+msgstr "Vrátit zpět"
+
+#: src/Admin/MigrationAjax.php
+msgid "Your session has expired. Reload the page."
+msgstr "Platnost přihlášení vypršela. Načtěte stránku znovu."
+
+#: src/Admin/MigrationAjax.php
+msgid "The site is no longer connected."
+msgstr "Web už není připojený."
+
+#: src/Admin/MigrationAjax.php
+msgid "Choose at least one table."
+msgstr "Vyberte aspoň jednu tabulku."
+
+#. translators: %s: regular expression entered by the user.
+#: src/Admin/MigrationAjax.php
+msgid "The regular expression %s is not valid. Write it with delimiters, e.g. /old-(\\d+)/."
+msgstr "Regulární výraz %s není platný. Zapište ho s oddělovači, např. /stare-(\\d+)/."
+
+#. translators: %s: table name.
+#: src/Admin/MigrationAjax.php
+msgid "Table %s"
+msgstr "Tabulka %s"
+
+#: src/Admin/MigrationAjax.php
+msgid "Preparing tables…"
+msgstr "Připravují se tabulky…"
+
+#. translators: 1: table name, 2: number of the table, 3: number of tables.
+#: src/Admin/MigrationAjax.php
+msgid "Transferring %1$s (%2$d of %3$d)"
+msgstr "Přenáší se %1$s (%2$d z %3$d)"
+
+#: src/Admin/MigrationAjax.php
+msgid "Checking the data and replacing the tables…"
+msgstr "Kontrolují se data a vyměňují tabulky…"
+
+#. translators: 1: data size, 2: duration, 3: speed per second.
+#: src/Admin/MigrationAjax.php
+msgid "%1$s in %2$s (%3$s/s)"
+msgstr "%1$s za %2$s (%3$s/s)"
+
+#. translators: 1: data size, 2: duration, 3: number of tables, 4: number of rows.
+#: src/Admin/MigrationAjax.php
+msgid "Transferred %1$s in %2$s: %3$s tables, %4$s rows."
+msgstr "Přeneseno %1$s za %2$s: tabulek %3$s, řádků %4$s."
+
+#. translators: 1: collation of the source, 2: collation used instead.
+#: src/Admin/MigrationAjax.php
+msgid "The target does not know the collation %1$s, %2$s is used instead."
+msgstr "Cílový web nezná řazení (collation) %1$s, použilo se %2$s."
+
+#. translators: %d: seconds.
+#: src/Admin/MigrationAjax.php
+msgid "%d s"
+msgstr "%d s"
+
+#. translators: 1: minutes, 2: seconds.
+#: src/Admin/MigrationAjax.php
+msgid "%1$d min %2$d s"
+msgstr "%1$d min %2$d s"
+
+#: src/Admin/MigrationView.php
+msgid "The migration is still running. Leaving the page stops it."
+msgstr "Migrace ještě běží. Odchodem ze stránky se zastaví."
+
+#. translators: %s: domain of the other site.
+#: src/Admin/MigrationView.php
+msgid "Pull from %s"
+msgstr "Pull z %s"
+
+#. translators: %s: domain of the other site.
+#: src/Admin/MigrationView.php
+msgid "Push to %s"
+msgstr "Push na %s"
+
+#: src/Admin/MigrationView.php
+msgid "Switch to Push"
+msgstr "Přepnout na Push"
+
+#: src/Admin/MigrationView.php
+msgid "Switch to Pull"
+msgstr "Přepnout na Pull"
+
+#. translators: %s: domain of the other site.
+#: src/Admin/MigrationView.php
+msgid "The database of this site will be replaced with the data of %s."
+msgstr "Databáze tohoto webu bude nahrazena daty z %s."
+
+#. translators: %s: domain of the other site.
+#: src/Admin/MigrationView.php
+msgid "The database of %s will be replaced with the data of this site."
+msgstr "Databáze webu %s bude nahrazena daty z tohoto webu."
+
+#: src/Admin/MigrationView.php
+msgid "Back to sites"
+msgstr "Zpět na weby"
+
+#: src/Admin/MigrationView.php
+msgid "Database"
+msgstr "Databáze"
+
+#. translators: 1: table prefix, 2: number of tables.
+#: src/Admin/MigrationView.php
+msgid "All tables with the prefix %1$s (%2$d)"
+msgstr "Všechny tabulky s prefixem %1$s (%2$d)"
+
+#. translators: %d: number of tables.
+#: src/Admin/MigrationView.php
+msgid "All tables in the database (%d)"
+msgstr "Úplně všechny tabulky v databázi (%d)"
+
+#: src/Admin/MigrationView.php
+msgid "Only selected tables"
+msgstr "Jen vybrané tabulky"
+
+#: src/Admin/MigrationView.php
+msgid "Tables"
+msgstr "Tabulky"
+
+#: src/Admin/MigrationView.php
+msgid "Hold Ctrl (Cmd on a Mac) to select more tables."
+msgstr "Více tabulek vyberete s klávesou Ctrl (na Macu Cmd)."
+
+#: src/Admin/MigrationView.php
+msgid "Find & replace"
+msgstr "Najít a nahradit"
+
+#: src/Admin/MigrationView.php
+msgid "Addresses and paths of the source are replaced with those of the target, also inside serialized data and JSON. Binary data are never changed."
+msgstr "Adresy a cesty zdrojového webu se nahradí adresami a cestami cílového webu, i uvnitř serializovaných dat a JSON. Binární data se nikdy nemění."
+
+#: src/Admin/MigrationView.php
+msgid "Find"
+msgstr "Najít"
+
+#: src/Admin/MigrationView.php
+msgid "Replace with"
+msgstr "Nahradit za"
+
+#: src/Admin/MigrationView.php
+msgid "Options"
+msgstr "Možnosti"
+
+#: src/Admin/MigrationView.php
+msgid "Both sites have the same address and path; nothing needs to be replaced."
+msgstr "Oba weby mají stejnou adresu i cestu, není potřeba nic nahrazovat."
+
+#: src/Admin/MigrationView.php
+msgid "automatic"
+msgstr "automaticky"
+
+#: src/Admin/MigrationView.php
+msgid "Convert to HTTPS"
+msgstr "Převést na HTTPS"
+
+#: src/Admin/MigrationView.php
+msgid "Convert to HTTP"
+msgstr "Převést na HTTP"
+
+#: src/Admin/MigrationView.php
+msgid "Match case: upper and lower case letters must match exactly. Off: “Warp” also finds “warp”."
+msgstr "Rozlišovat velikost písmen: velká a malá písmena se musí přesně shodovat. Vypnuto: „Warp“ najde i „warp“."
+
+#: src/Admin/MigrationView.php
+msgid "Match case"
+msgstr "Rozlišovat velikost písmen"
+
+#: src/Admin/MigrationView.php
+msgid "Regular expression with delimiters, e.g. /old-(\\d+)/; use $1 in the replacement for the matched group."
+msgstr "Regulární výraz s oddělovači, např. /stare-(\\d+)/; v náhradě $1 vloží nalezenou skupinu."
+
+#: src/Admin/MigrationView.php
+msgid "Regular expression"
+msgstr "Regulární výraz"
+
+#: src/Admin/MigrationView.php src/Admin/SettingsView.php
+msgid "Remove"
+msgstr "Odebrat"
+
+#: src/Admin/MigrationView.php
+msgid "Add a row"
+msgstr "Přidat řádek"
+
+#: src/Admin/MigrationView.php src/Admin/SitesView.php
+msgid "Pull"
+msgstr "Pull"
+
+#: src/Admin/MigrationView.php src/Admin/SitesView.php
+msgid "Push"
+msgstr "Push"
+
+#: src/Admin/MigrationView.php src/Admin/SitesView.php
+msgid "Cancel"
+msgstr "Zrušit"
+
+#: src/Admin/MigrationView.php
+msgid "Cancel the migration"
+msgstr "Zrušit migraci"
+
+#: src/Admin/MigrationView.php
+msgid "Done, check the site"
+msgstr "Hotovo, zkontrolujte web"
+
+#: src/Admin/MigrationView.php
+msgid "The previous tables of this site are kept aside. Confirm to delete them, or undo to get the previous state back. The migration is confirmed automatically after 7 days or with the next migration."
+msgstr "Původní tabulky tohoto webu jsou odložené stranou. Potvrzením se smažou, Vrátit zpět obnoví předchozí stav. Migrace se potvrdí sama po 7 dnech nebo při další migraci."
+
+#. translators: %s: domain of the other site.
+#: src/Admin/MigrationView.php
+msgid "The previous tables of %s are kept aside. Confirm to delete them, or undo to get the previous state back. The migration is confirmed automatically after 7 days or with the next migration."
+msgstr "Původní tabulky webu %s jsou odložené stranou. Potvrzením se smažou, Vrátit zpět obnoví předchozí stav. Migrace se potvrdí sama po 7 dnech nebo při další migraci."
+
+#: src/Admin/MigrationView.php
+msgid "Open the site"
+msgstr "Otevřít web"
+
+#: src/Admin/MigrationView.php
+msgid "Undo the migration and restore the previous tables?"
+msgstr "Vrátit migraci zpět a obnovit původní tabulky?"
+
+#: src/Admin/MigrationView.php
+msgid "Your user account does not exist in the pulled database, so you were logged out. Log in with an account of the pulled site to confirm or undo the migration."
+msgstr "Váš uživatelský účet ve stažené databázi není, proto jste byli odhlášeni. Přihlaste se účtem staženého webu a migraci potvrďte nebo vraťte zpět."
+
+#: src/Admin/MigrationView.php
+msgid "The migration was cancelled; the target was not changed."
+msgstr "Migrace je zrušená, cílový web se nezměnil."
+
+#: src/Admin/MigrationView.php
+msgid "The migration failed. The target was not changed."
+msgstr "Migrace selhala. Cílový web se nezměnil."
+
+#: src/Admin/MigrationView.php
+msgid "Technical details"
+msgstr "Technické podrobnosti"
 
 #: src/Admin/SettingsView.php
 msgid "Key of this site"
@@ -124,10 +394,6 @@ msgstr "Akce"
 #: src/Admin/SettingsView.php
 msgid "Remove %s? It will no longer be able to pull from or push to this site."
 msgstr "Odebrat %s? Už nebude moct z tohoto webu stahovat ani na něj nahrávat."
-
-#: src/Admin/SettingsView.php
-msgid "Remove"
-msgstr "Odebrat"
 
 #: src/Admin/SettingsView.php
 msgid "Warp version"
@@ -227,10 +493,6 @@ msgstr "Použijte, jen když víte, proč certifikát neplatí, například nov�
 msgid "Connect"
 msgstr "Připojit"
 
-#: src/Admin/SitesView.php
-msgid "Cancel"
-msgstr "Zrušit"
-
 #: src/Api/Client.php
 msgid "The address of the other site leads back to this site. If you are moving a site to another hosting with the same domain, enter the IP address of the other server."
 msgstr "Adresa druhého webu vede zpět na tento web. Pokud stěhujete web na jiný hosting se stejnou doménou, zadejte IP adresu druhého serveru."
@@ -301,6 +563,15 @@ msgid "The REST API of the other site is open only to logged-in users (a plugin 
 msgstr "REST API druhého webu je otevřené jen přihlášeným (omezuje ho plugin nebo nastavení), nebo tam není Warp aktivní. Zkontrolujte, že je Warp aktivní, a v tom pluginu povolte jmenný prostor wm-warp/v1."
 
 #: src/Api/Client.php
+msgid "The other site refused a request because it is too large (HTTP 413). Increase the upload limits of its server (post_max_size, client_max_body_size) or contact the hosting."
+msgstr "Druhý web odmítl příliš velký požadavek (HTTP 413). Zvyšte limity nahrávání na jeho serveru (post_max_size, client_max_body_size) nebo kontaktujte hosting."
+
+#. translators: %s: technical error from the other site.
+#: src/Api/Client.php
+msgid "The migration failed on the other site: %s"
+msgstr "Migrace na druhém webu selhala: %s"
+
+#: src/Api/Client.php
 msgid "The other site cannot write to the folder wp-content/wm-warp. Check the folder permissions on its server."
 msgstr "Druhý web nemůže zapisovat do složky wp-content/wm-warp. Zkontrolujte oprávnění složky na jeho serveru."
 
@@ -320,6 +591,27 @@ msgstr "Druhý web požadavek odmítl. REST API nebo požadavky z tohoto serveru
 #: src/Api/Client.php
 msgid "The other site responded with an error (HTTP %d). Check its PHP error log."
 msgstr "Druhý web odpověděl chybou (HTTP %d). Podívejte se do jeho PHP logu chyb."
+
+#: src/Migration/Runner.php
+msgid "Another migration is running on this site. Wait until it ends or cancel it."
+msgstr "Na tomto webu běží jiná migrace. Počkejte, až skončí, nebo ji zrušte."
+
+#: src/Migration/Runner.php
+msgid "No table is chosen for the migration."
+msgstr "Pro migraci není vybraná žádná tabulka."
+
+#. translators: %s: error reported by the database.
+#: src/Migration/Runner.php
+msgid "The database refused a statement: %s"
+msgstr "Databáze odmítla příkaz: %s"
+
+#: src/Migration/Runner.php
+msgid "The site of this migration is no longer connected."
+msgstr "Web této migrace už není připojený."
+
+#: src/Migration/Runner.php
+msgid "There is no migration on this site."
+msgstr "Na tomto webu žádná migrace není."
 
 #: src/Sites/Connector.php
 msgid "This is not a valid Warp key. Copy the whole key from the Settings tab of the other site."

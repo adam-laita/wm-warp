@@ -47,4 +47,6 @@ spl_autoload_register(
 	}
 );
 
+register_deactivation_hook( __FILE__, array( Maintenance::class, 'unschedule' ) );
+
 Plugin::instance()->register();

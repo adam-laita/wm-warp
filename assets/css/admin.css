@@ -241,3 +241,166 @@
 .wm-warp__key button {
 	flex-shrink: 0;
 }
+
+/* Sites list: Pull and Push next to Disconnect. */
+.wm-warp__actions .button {
+	margin-left: 0.35rem;
+}
+
+.wm-warp__actions form {
+	display: inline-block;
+	margin-left: 0.75rem;
+}
+
+/* Migration */
+.wm-warp__migration-head {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem 1rem;
+	align-items: baseline;
+	justify-content: space-between;
+}
+
+.wm-warp__lead {
+	margin-top: 0;
+	font-size: 1rem;
+}
+
+.wm-warp__section {
+	margin: 1.5rem 0 0;
+	padding: 1rem 1.25rem 1.25rem;
+	border: 1px solid rgb(220, 220, 222);
+	border-radius: 0.5rem;
+}
+
+.wm-warp__section legend {
+	padding: 0 0.35rem;
+	color: rgb(var(--wm-warp-purple-dark));
+	font-size: 1rem;
+	font-weight: 600;
+}
+
+.wm-warp__choice {
+	display: block;
+	margin: 0.35rem 0;
+}
+
+.wm-warp__tables {
+	margin: 0.75rem 0 0 1.6rem;
+}
+
+.wm-warp__tables select {
+	width: 100%;
+	max-width: 36rem;
+}
+
+.wm-warp__rules {
+	width: 100%;
+	border-collapse: collapse;
+}
+
+.wm-warp__rules th {
+	padding: 0.4rem 0.5rem;
+	text-align: left;
+}
+
+.wm-warp__rules td {
+	padding: 0.4rem 0.5rem;
+	border-top: 1px solid rgb(240, 240, 241);
+	vertical-align: middle;
+}
+
+.wm-warp__rules input[type="text"] {
+	width: 100%;
+}
+
+.wm-warp__rule--auto code {
+	background: rgb(var(--wm-warp-purple-lighter));
+	word-break: break-all;
+}
+
+.wm-warp__rule-options {
+	white-space: nowrap;
+}
+
+.wm-warp__toggle {
+	display: inline-flex;
+	align-items: center;
+	margin-right: 0.35rem;
+}
+
+.wm-warp__toggle input {
+	position: absolute;
+	opacity: 0;
+}
+
+.wm-warp__toggle span[aria-hidden] {
+	min-width: 1.9rem;
+	padding: 0.15rem 0.35rem;
+	border: 1px solid rgb(140, 143, 148);
+	border-radius: 0.25rem;
+	font-family: Consolas, Monaco, monospace;
+	text-align: center;
+	cursor: pointer;
+}
+
+.wm-warp__toggle input:checked + span {
+	border-color: rgb(var(--wm-warp-purple-dark));
+	background: rgb(var(--wm-warp-purple-dark));
+	color: rgb(255, 255, 255);
+}
+
+.wm-warp__toggle input:focus-visible + span {
+	outline: 2px solid rgb(var(--wm-warp-pink));
+	outline-offset: 1px;
+}
+
+.wm-warp__progress,
+.wm-warp__result,
+.wm-warp__final,
+.wm-warp__failure {
+	margin-top: 1.25rem;
+}
+
+.wm-warp__progress progress {
+	width: 100%;
+	height: 1rem;
+	accent-color: rgb(var(--wm-warp-pink));
+}
+
+.wm-warp__phase {
+	font-size: 1rem;
+	font-weight: 600;
+}
+
+.wm-warp__stats {
+	color: rgb(var(--wm-warp-grey));
+}
+
+.wm-warp__result h3 {
+	margin-top: 0;
+	color: rgb(var(--wm-warp-purple-dark));
+}
+
+.wm-warp__failure pre {
+	max-height: 20rem;
+	overflow: auto;
+	padding: 0.75rem;
+	background: rgb(246, 247, 247);
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.wm-warp__pending {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem 1rem;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.wm-warp__pending-actions {
+	display: flex;
+	gap: 0.5rem;
+	margin: 0.5rem 0;
+}

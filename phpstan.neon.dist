@@ -4,6 +4,8 @@ includes:
 parameters:
 	level: 8
 	phpVersion: 80300
+	bootstrapFiles:
+		- tests/phpstan-bootstrap.php
 	paths:
 		- wm-warp.php
 		- src

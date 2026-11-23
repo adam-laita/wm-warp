@@ -9,6 +9,8 @@ declare(strict_types=1);
 
 namespace WM\Warp\Admin;
 
+use WM\Warp\Database\Importer;
+use WM\Warp\Migration\Runner;
 use WM\Warp\Plugin;
 use WM\Warp\Sites\ConnectionStore;
 use WM\Warp\Sites\SiteIdentity;
@@ -149,16 +151,66 @@ final class AdminPage {
 				</div>
 			<?php endif; ?>
 
+			<?php $this->render_pending(); ?>
+
 			<div class="wm-warp__content">
 				<?php
+				$connection = 'migrate' === $view && isset( $_GET['connection'] ) ? $this->outgoing->get( sanitize_key( wp_unslash( $_GET['connection'] ) ) ) : null; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+				$direction  = isset( $_GET['direction'] ) && Runner::PUSH === $_GET['direction'] ? Runner::PUSH : Runner::PULL; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+
 				if ( 'settings' === $current ) {
 					( new SettingsView( $this->identity, $this->incoming ) )->render();
+				} elseif ( null !== $connection ) {
+					( new MigrationView( $this->identity ) )->render( $connection, $direction );
 				} elseif ( 'connect' === $view ) {
 					( new SitesView( $this->outgoing ) )->render_connect( $flash );
 				} else {
 					( new SitesView( $this->outgoing ) )->render_list();
 				}
 				?>
+			</div>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Notice about a migration waiting for confirmation, with Confirm and Undo.
+	 */
+	private function render_pending(): void {
+		$run    = Runner::current();
+		$import = Importer::pending();
+
+		if ( null !== $run && Runner::DONE === $run['status'] ) {
+			$scope = 'run';
+			$text  = Runner::PULL === $run['direction']
+				/* translators: 1: domain of the other site, 2: date and time. */
+				? sprintf( __( 'The pull from %1$s (%2$s) waits for confirmation. The previous tables of this site are kept aside until then.', 'wm-warp' ), (string) $run['host'], self::date( (int) $run['finished'] ) )
+				/* translators: 1: domain of the other site, 2: date and time. */
+				: sprintf( __( 'The push to %1$s (%2$s) waits for confirmation. The previous tables of that site are kept aside until then.', 'wm-warp' ), (string) $run['host'], self::date( (int) $run['finished'] ) );
+		} elseif ( null !== $import ) {
+			$scope = 'import';
+			/* translators: 1: name of the other site, 2: date and time. */
+			$text = sprintf( __( 'The migration from %1$s (%2$s) waits for confirmation. The previous tables of this site are kept aside until then.', 'wm-warp' ), $import['source'], self::date( $import['finished'] ) );
+		} else {
+			return;
+		}
+		$buttons = array(
+			'confirm'  => __( 'Confirm', 'wm-warp' ),
+			'rollback' => __( 'Undo', 'wm-warp' ),
+		);
+		?>
+		<div class="notice notice-warning inline wm-warp__pending">
+			<p><?php echo esc_html( $text ); ?></p>
+			<div class="wm-warp__pending-actions">
+				<?php foreach ( $buttons as $command => $label ) : ?>
+					<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+						<input type="hidden" name="action" value="<?php echo esc_attr( Actions::PENDING ); ?>">
+						<input type="hidden" name="scope" value="<?php echo esc_attr( $scope ); ?>">
+						<input type="hidden" name="command" value="<?php echo esc_attr( $command ); ?>">
+						<?php wp_nonce_field( Actions::PENDING ); ?>
+						<button type="submit" class="button<?php echo 'confirm' === $command ? ' button-primary' : ''; ?>"><?php echo esc_html( $label ); ?></button>
+					</form>
+				<?php endforeach; ?>
 			</div>
 		</div>
 		<?php
