@@ -37,6 +37,19 @@
 		</properties>
 	</rule>
 
+	<!--
+		Exception messages are never printed directly: ClientError messages are shown only through
+		esc_html() in the admin page. Escaping them when thrown would escape them twice.
+	-->
+	<rule ref="WordPress.Security.EscapeOutput.ExceptionNotEscaped">
+		<exclude-pattern>src/*</exclude-pattern>
+	</rule>
+
+	<!-- The test bootstrap defines stand-ins for WordPress functions. -->
+	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">
+		<exclude-pattern>tests/bootstrap.php</exclude-pattern>
+	</rule>
+
 	<rule ref="PHPCompatibilityWP"/>
 
 	<!-- Command line tools and tests run outside WordPress. -->

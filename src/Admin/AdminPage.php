@@ -10,6 +10,8 @@ declare(strict_types=1);
 namespace WM\Warp\Admin;
 
 use WM\Warp\Plugin;
+use WM\Warp\Sites\ConnectionStore;
+use WM\Warp\Sites\SiteIdentity;
 use const WM\Warp\VERSION;
 
 /**
@@ -26,6 +28,21 @@ final class AdminPage {
 	 * @var string
 	 */
 	private string $hook_suffix = '';
+
+	/**
+	 * Constructor.
+	 *
+	 * @param SiteIdentity    $identity Identity of this site.
+	 * @param ConnectionStore $outgoing Sites this site connected to.
+	 * @param ConnectionStore $incoming Sites connected to this site.
+	 * @param Flash           $flash    Messages from the last action.
+	 */
+	public function __construct(
+		private SiteIdentity $identity,
+		private ConnectionStore $outgoing,
+		private ConnectionStore $incoming,
+		private Flash $flash
+	) {}
 
 	/**
 	 * Registers hooks.
@@ -51,7 +68,7 @@ final class AdminPage {
 	}
 
 	/**
-	 * Loads styles on the plugin page only.
+	 * Loads styles and scripts on the plugin page only.
 	 *
 	 * @param string $hook_suffix Current admin page.
 	 */
@@ -60,7 +77,28 @@ final class AdminPage {
 			return;
 		}
 
-		wp_enqueue_style( 'wm-warp-admin', Plugin::url( 'assets/css/admin.css' ), array(), VERSION );
+		wp_enqueue_style( 'wm-warp-admin', Plugin::url( 'assets/css/admin.css' ), array(), self::asset_version( 'assets/css/admin.css' ) );
+		wp_enqueue_script(
+			'wm-warp-admin',
+			Plugin::url( 'assets/js/admin.js' ),
+			array(),
+			self::asset_version( 'assets/js/admin.js' ),
+			array(
+				'in_footer' => true,
+				'strategy'  => 'defer',
+			)
+		);
+	}
+
+	/**
+	 * Version of an asset for cache busting: plugin version and file modification time.
+	 *
+	 * @param string $path Path relative to the plugin folder.
+	 */
+	private static function asset_version( string $path ): string {
+		$mtime = filemtime( dirname( \WM\Warp\PLUGIN_FILE ) . '/' . $path );
+
+		return VERSION . ( false === $mtime ? '' : '.' . $mtime );
 	}
 
 	/**
@@ -84,8 +122,10 @@ final class AdminPage {
 		}
 
 		$tabs = $this->tabs();
-		// Read-only navigation parameter, the value is checked against the list of tabs.
+		// Read-only navigation parameters, checked against known values.
 		$current = $tabs->resolve( isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : null ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$view    = isset( $_GET['view'] ) ? sanitize_key( wp_unslash( $_GET['view'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$flash   = $this->flash->take();
 		?>
 		<div class="wrap wm-warp">
 			<header class="wm-warp__header">
@@ -96,19 +136,27 @@ final class AdminPage {
 			<nav class="nav-tab-wrapper wm-warp__tabs" aria-label="<?php esc_attr_e( 'Warp sections', 'wm-warp' ); ?>">
 				<?php foreach ( $tabs->all() as $slug => $label ) : ?>
 					<a
-						href="<?php echo esc_url( $this->tab_url( $slug ) ); ?>"
+						href="<?php echo esc_url( self::url( 'sites' === $slug ? array() : array( 'tab' => $slug ) ) ); ?>"
 						class="nav-tab<?php echo $slug === $current ? ' nav-tab-active' : ''; ?>"
 						<?php echo $slug === $current ? 'aria-current="page"' : ''; ?>
 					><?php echo esc_html( $label ); ?></a>
 				<?php endforeach; ?>
 			</nav>
 
+			<?php if ( null !== $flash ) : ?>
+				<div class="notice notice-<?php echo esc_attr( $flash['type'] ); ?> inline wm-warp__notice" role="<?php echo 'error' === $flash['type'] ? 'alert' : 'status'; ?>">
+					<p><?php echo esc_html( $flash['message'] ); ?></p>
+				</div>
+			<?php endif; ?>
+
 			<div class="wm-warp__content">
 				<?php
 				if ( 'settings' === $current ) {
-					$this->render_settings();
+					( new SettingsView( $this->identity, $this->incoming ) )->render();
+				} elseif ( 'connect' === $view ) {
+					( new SitesView( $this->outgoing ) )->render_connect( $flash );
 				} else {
-					$this->render_sites();
+					( new SitesView( $this->outgoing ) )->render_list();
 				}
 				?>
 			</div>
@@ -117,58 +165,24 @@ final class AdminPage {
 	}
 
 	/**
-	 * URL of a tab.
+	 * URL of the admin page.
 	 *
-	 * @param string $slug Tab slug.
+	 * @param array<string, string> $args Query arguments.
 	 */
-	private function tab_url( string $slug ): string {
-		$args = array( 'page' => self::SLUG );
+	public static function url( array $args = array() ): string {
+		return add_query_arg( array_merge( array( 'page' => self::SLUG ), $args ), admin_url( 'tools.php' ) );
+	}
 
-		if ( Tabs::DEFAULT_TAB !== $slug ) {
-			$args['tab'] = $slug;
+	/**
+	 * Formats a time for display.
+	 *
+	 * @param int $time Unix time; 0 for never.
+	 */
+	public static function date( int $time ): string {
+		if ( 0 === $time ) {
+			return '—';
 		}
 
-		return add_query_arg( $args, admin_url( 'tools.php' ) );
-	}
-
-	/**
-	 * Sites tab. Connected sites come with the pairing step; until then the empty state.
-	 */
-	private function render_sites(): void {
-		?>
-		<section class="wm-warp__empty">
-			<h2><?php esc_html_e( 'No sites connected yet', 'wm-warp' ); ?></h2>
-			<p><?php esc_html_e( 'Connect another site with Warp installed, then pull or push its database and files in a few clicks.', 'wm-warp' ); ?></p>
-		</section>
-		<?php
-	}
-
-	/**
-	 * Settings tab: information about this site.
-	 */
-	private function render_settings(): void {
-		global $wpdb;
-
-		$rows = array(
-			__( 'Warp version', 'wm-warp' )      => VERSION,
-			__( 'WordPress version', 'wm-warp' ) => get_bloginfo( 'version' ),
-			__( 'PHP version', 'wm-warp' )       => PHP_VERSION,
-			__( 'Database server', 'wm-warp' )   => (string) $wpdb->db_server_info(),
-		);
-		?>
-		<section class="wm-warp__card">
-			<h2><?php esc_html_e( 'This site', 'wm-warp' ); ?></h2>
-			<table class="wm-warp__facts">
-				<tbody>
-				<?php foreach ( $rows as $label => $value ) : ?>
-					<tr>
-						<th scope="row"><?php echo esc_html( $label ); ?></th>
-						<td><?php echo esc_html( $value ); ?></td>
-					</tr>
-				<?php endforeach; ?>
-				</tbody>
-			</table>
-		</section>
-		<?php
+		return (string) wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $time );
 	}
 }

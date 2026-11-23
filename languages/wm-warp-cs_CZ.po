@@ -24,6 +24,34 @@ msgstr "Migrace a synchronizace dat mezi weby na WordPressu."
 msgid "WebManiak"
 msgstr "WebManiak"
 
+#. translators: %s: name of the connected site.
+#: src/Admin/Actions.php
+msgid "The site %s is connected."
+msgstr "Web %s je připojený."
+
+#. translators: %s: name of the site.
+#: src/Admin/Actions.php
+msgid "The site %s is disconnected."
+msgstr "Web %s je odpojený."
+
+#. translators: %s: name of the site.
+#: src/Admin/Actions.php
+msgid "The site %s is disconnected here, but it could not be reached. Remove this site in the Settings tab of the other site as well."
+msgstr "Web %s je tady odpojený, ale nepodařilo se s ním spojit. Odeberte tento web i na druhém webu v záložce Nastavení."
+
+#: src/Admin/Actions.php
+msgid "A new key was generated. The old key no longer works; connected sites keep working."
+msgstr "Byl vygenerován nový klíč. Starý klíč už neplatí, připojené weby fungují dál."
+
+#. translators: %s: name of the site.
+#: src/Admin/Actions.php
+msgid "The site %s can no longer connect to this site."
+msgstr "Web %s se už k tomuto webu nemůže připojit."
+
+#: src/Admin/Actions.php src/Admin/AdminPage.php
+msgid "You do not have permission to access this page."
+msgstr "K této stránce nemáte přístup."
+
 #: src/Admin/AdminPage.php
 msgid "Warp"
 msgstr "Warp"
@@ -37,10 +65,6 @@ msgid "Settings"
 msgstr "Nastavení"
 
 #: src/Admin/AdminPage.php
-msgid "You do not have permission to access this page."
-msgstr "K této stránce nemáte přístup."
-
-#: src/Admin/AdminPage.php
 msgid "Pull and push the database and files between your WordPress sites."
 msgstr "Pull a Push databáze a souborů mezi vašimi weby na WordPressu."
 
@@ -48,30 +72,259 @@ msgstr "Pull a Push databáze a souborů mezi vašimi weby na WordPressu."
 msgid "Warp sections"
 msgstr "Sekce Warpu"
 
-#: src/Admin/AdminPage.php
-msgid "No sites connected yet"
-msgstr "Zatím není připojený žádný web"
+#: src/Admin/SettingsView.php
+msgid "Key of this site"
+msgstr "Klíč tohoto webu"
 
-#: src/Admin/AdminPage.php
-msgid "Connect another site with Warp installed, then pull or push its database and files in a few clicks."
-msgstr "Připojte jiný web s nainstalovaným Warpem a pak pár kliknutími spusťte Pull nebo Push jeho databáze a souborů."
+#: src/Admin/SettingsView.php
+msgid "Paste it on the other site in Connect a new site. The key is used only to make a connection; keep it private, anyone with the key can connect to this site."
+msgstr "Vložte ho na druhém webu do Připojit nový web. Klíč slouží jen k navázání spojení. Nikomu ho nedávejte, kdo ho má, může se k tomuto webu připojit."
 
-#: src/Admin/AdminPage.php
+#: src/Admin/SettingsView.php
+msgid "Copied"
+msgstr "Zkopírováno"
+
+#: src/Admin/SettingsView.php
+msgid "Copy"
+msgstr "Kopírovat"
+
+#: src/Admin/SettingsView.php
+msgid "Generate a new key? The current key stops working; connected sites keep working."
+msgstr "Vygenerovat nový klíč? Současný klíč přestane platit, připojené weby budou fungovat dál."
+
+#: src/Admin/SettingsView.php
+msgid "Generate a new key"
+msgstr "Vygenerovat nový klíč"
+
+#: src/Admin/SettingsView.php
+msgid "Sites connected to this site"
+msgstr "Weby připojené k tomuto webu"
+
+#: src/Admin/SettingsView.php
+msgid "No other site is connected to this site."
+msgstr "K tomuto webu není připojený žádný jiný web."
+
+#: src/Admin/SettingsView.php src/Admin/SitesView.php
+msgid "Site"
+msgstr "Web"
+
+#: src/Admin/SettingsView.php src/Admin/SitesView.php
+msgid "Connected"
+msgstr "Připojeno"
+
+#: src/Admin/SettingsView.php
+msgid "Last request"
+msgstr "Poslední požadavek"
+
+#: src/Admin/SettingsView.php src/Admin/SitesView.php
+msgid "Actions"
+msgstr "Akce"
+
+#. translators: %s: name of the site.
+#: src/Admin/SettingsView.php
+msgid "Remove %s? It will no longer be able to pull from or push to this site."
+msgstr "Odebrat %s? Už nebude moct z tohoto webu stahovat ani na něj nahrávat."
+
+#: src/Admin/SettingsView.php
+msgid "Remove"
+msgstr "Odebrat"
+
+#: src/Admin/SettingsView.php
 msgid "Warp version"
 msgstr "Verze Warpu"
 
-#: src/Admin/AdminPage.php
+#: src/Admin/SettingsView.php
 msgid "WordPress version"
 msgstr "Verze WordPressu"
 
-#: src/Admin/AdminPage.php
+#: src/Admin/SettingsView.php
 msgid "PHP version"
 msgstr "Verze PHP"
 
-#: src/Admin/AdminPage.php
+#: src/Admin/SettingsView.php
 msgid "Database server"
 msgstr "Databázový server"
 
-#: src/Admin/AdminPage.php
+#: src/Admin/SettingsView.php
 msgid "This site"
 msgstr "Tento web"
+
+#: src/Admin/SitesView.php
+msgid "No sites connected yet"
+msgstr "Zatím není připojený žádný web"
+
+#: src/Admin/SitesView.php
+msgid "Connect another site with Warp installed, then pull or push its database and files in a few clicks."
+msgstr "Připojte jiný web s nainstalovaným Warpem a pak pár kliknutími spusťte Pull nebo Push jeho databáze a souborů."
+
+#: src/Admin/SitesView.php
+msgid "Connect a new site"
+msgstr "Připojit nový web"
+
+#: src/Admin/SitesView.php
+msgid "You will need the key of the other site: Tools → Warp → Settings on that site."
+msgstr "Budete potřebovat klíč druhého webu: na něm Nástroje → Warp → Nastavení."
+
+#. translators: %s: Warp version on the other site.
+#: src/Admin/SitesView.php
+msgid "Warp %s"
+msgstr "Warp %s"
+
+#. translators: %s: name of the site.
+#: src/Admin/SitesView.php
+msgid "Disconnect %s? To connect it again you will need its key."
+msgstr "Odpojit %s? K novému připojení budete potřebovat jeho klíč."
+
+#: src/Admin/SitesView.php
+msgid "Disconnect"
+msgstr "Odpojit"
+
+#: src/Admin/SitesView.php
+msgid "Key of the other site"
+msgstr "Klíč druhého webu"
+
+#: src/Admin/SitesView.php
+msgid "On the other site: Tools → Warp → Settings → Copy."
+msgstr "Na druhém webu: Nástroje → Warp → Nastavení → Kopírovat."
+
+#: src/Admin/SitesView.php
+msgid "Server password (optional)"
+msgstr "Heslo serveru (volitelné)"
+
+#: src/Admin/SitesView.php
+msgid "Fill in only when the other site is protected by a server password (HTTP authentication), typically a development or staging site."
+msgstr "Vyplňte, jen když je druhý web chráněný heslem serveru (HTTP autorizace), typicky vývojový nebo testovací web."
+
+#: src/Admin/SitesView.php
+msgid "User name"
+msgstr "Uživatelské jméno"
+
+#: src/Admin/SitesView.php
+msgid "Password"
+msgstr "Heslo"
+
+#: src/Admin/SitesView.php
+msgid "Moving a site to another hosting with the same domain?"
+msgstr "Stěhujete web na jiný hosting se stejnou doménou?"
+
+#: src/Admin/SitesView.php
+msgid "IP address of the other server"
+msgstr "IP adresa druhého serveru"
+
+#: src/Admin/SitesView.php
+msgid "Warp then connects to this server instead of the one the domain leads to, like an entry in the hosts file on your computer. Leave empty otherwise."
+msgstr "Warp se pak připojí k tomuto serveru místo toho, kam vede doména, podobně jako záznam v souboru hosts na vašem počítači. Jinak nechte prázdné."
+
+#: src/Admin/SitesView.php
+msgid "Connect anyway, without checking the certificate"
+msgstr "Přesto připojit, bez ověření certifikátu"
+
+#: src/Admin/SitesView.php
+msgid "Use only when you know why the certificate is invalid, e.g. a new hosting before the domain is moved. Warp data stay signed and encrypted; only the server password could be exposed."
+msgstr "Použijte, jen když víte, proč certifikát neplatí, například nový hosting před přesunem domény. Data Warpu zůstávají podepsaná a šifrovaná, ohrožené by mohlo být jen heslo serveru."
+
+#: src/Admin/SitesView.php
+msgid "Connect"
+msgstr "Připojit"
+
+#: src/Admin/SitesView.php
+msgid "Cancel"
+msgstr "Zrušit"
+
+#: src/Api/Client.php
+msgid "The address of the other site leads back to this site. If you are moving a site to another hosting with the same domain, enter the IP address of the other server."
+msgstr "Adresa druhého webu vede zpět na tento web. Pokud stěhujete web na jiný hosting se stejnou doménou, zadejte IP adresu druhého serveru."
+
+#: src/Api/Client.php
+msgid "A different site with Warp answered at this address. The domain probably leads to another server; enter the IP address of the right server."
+msgstr "Na této adrese odpověděl jiný web s Warpem. Doména nejspíš vede na jiný server, zadejte IP adresu správného serveru."
+
+#: src/Api/Client.php src/Sites/Connector.php
+msgid "The other site sent an unexpected response. A firewall, proxy or security plugin may be changing the communication."
+msgstr "Druhý web poslal nečekanou odpověď. Komunikaci nejspíš mění firewall, proxy nebo bezpečnostní plugin."
+
+#. translators: %s: domain of the other site.
+#: src/Api/Client.php
+msgid "The HTTPS certificate of %s could not be verified (expired, self-signed or issued for another domain)."
+msgstr "Certifikát HTTPS webu %s se nepodařilo ověřit (vypršel, je podepsaný sám sebou nebo je vydaný pro jinou doménu)."
+
+#. translators: %s: domain of the other site.
+#: src/Api/Client.php
+msgid "The domain %s cannot be found. Check the key; if the site is not in public DNS yet, enter the IP address of its server."
+msgstr "Doménu %s se nepodařilo najít. Zkontrolujte klíč; pokud web ještě není ve veřejném DNS, zadejte IP adresu jeho serveru."
+
+#. translators: %s: domain of the other site.
+#: src/Api/Client.php
+msgid "The site %s did not answer in time. Check that it is running and reachable from this server."
+msgstr "Web %s neodpověděl včas. Zkontrolujte, že běží a že je z tohoto serveru dostupný."
+
+#. translators: %s: domain of the other site.
+#: src/Api/Client.php
+msgid "This server cannot reach %s. Check that the site is running and reachable from the internet; a local site can only connect to others, it cannot be connected to."
+msgstr "Tento server se k webu %s nedostane. Zkontrolujte, že web běží a je dostupný z internetu. Lokální web se umí připojit k jiným, ale nejde se připojit k němu."
+
+#. translators: %s: address the other site redirects to.
+#: src/Api/Client.php
+msgid "The other site redirects to %s. Copy the key again from the site at its current address."
+msgstr "Druhý web přesměrovává na %s. Zkopírujte klíč znovu z webu na jeho aktuální adrese."
+
+#: src/Api/Client.php
+msgid "The other site is protected by a server password (HTTP authentication). Enter the user name and password."
+msgstr "Druhý web je chráněný heslem serveru (HTTP autorizace). Zadejte uživatelské jméno a heslo."
+
+#: src/Api/Client.php
+msgid "The server password (HTTP authentication) of the other site is wrong. Check the user name and password."
+msgstr "Heslo serveru (HTTP autorizace) druhého webu nesouhlasí. Zkontrolujte uživatelské jméno a heslo."
+
+#: src/Api/Client.php
+msgid "The key is no longer valid; a new key was probably generated on the other site. Copy the current key from its Settings tab."
+msgstr "Klíč už neplatí, na druhém webu byl nejspíš vygenerován nový. Zkopírujte aktuální klíč z jeho záložky Nastavení."
+
+#: src/Api/Client.php
+msgid "The other site no longer accepts this connection; it was probably removed there. Disconnect the site and connect it again."
+msgstr "Druhý web už toto spojení nepřijímá, nejspíš ho tam někdo odebral. Web odpojte a připojte znovu."
+
+#: src/Api/Client.php src/Sites/Connector.php
+msgid "This is the key of this site. Paste the key of the other site."
+msgstr "Tohle je klíč tohoto webu. Vložte klíč druhého webu."
+
+#: src/Api/Client.php
+msgid "The other site temporarily blocked requests from this server after too many failed attempts. Try again in 15 minutes."
+msgstr "Druhý web po příliš mnoha neúspěšných pokusech dočasně zablokoval požadavky z tohoto serveru. Zkuste to znovu za 15 minut."
+
+#: src/Api/Client.php src/Sites/Connector.php
+msgid "The versions of Warp on the two sites are not compatible. Update Warp on both sites to the same version."
+msgstr "Verze Warpu na obou webech spolu nejsou kompatibilní. Aktualizujte Warp na obou webech na stejnou verzi."
+
+#: src/Api/Client.php
+msgid "The REST API of the other site is open only to logged-in users (a plugin or setting restricts it), or Warp is not active there. Check that Warp is active and allow the wm-warp/v1 namespace in that plugin."
+msgstr "REST API druhého webu je otevřené jen přihlášeným (omezuje ho plugin nebo nastavení), nebo tam není Warp aktivní. Zkontrolujte, že je Warp aktivní, a v tom pluginu povolte jmenný prostor wm-warp/v1."
+
+#: src/Api/Client.php
+msgid "The other site cannot write to the folder wp-content/wm-warp. Check the folder permissions on its server."
+msgstr "Druhý web nemůže zapisovat do složky wp-content/wm-warp. Zkontrolujte oprávnění složky na jeho serveru."
+
+#: src/Api/Client.php
+msgid "Warp is not active on the other site, or it is an older version. Install and activate Warp there."
+msgstr "Na druhém webu není Warp aktivní, nebo je tam starší verze. Nainstalujte a aktivujte ho tam."
+
+#: src/Api/Client.php
+msgid "The REST API of the other site is not available. Check that Warp is active there and that the REST API is not disabled by a plugin or the server."
+msgstr "REST API druhého webu není dostupné. Zkontrolujte, že je tam Warp aktivní a že REST API nevypíná plugin nebo server."
+
+#: src/Api/Client.php
+msgid "The other site refused the request. A security plugin or the hosting firewall (WAF) may block the REST API or requests from this server."
+msgstr "Druhý web požadavek odmítl. REST API nebo požadavky z tohoto serveru může blokovat bezpečnostní plugin nebo firewall hostingu (WAF)."
+
+#. translators: %d: HTTP status code.
+#: src/Api/Client.php
+msgid "The other site responded with an error (HTTP %d). Check its PHP error log."
+msgstr "Druhý web odpověděl chybou (HTTP %d). Podívejte se do jeho PHP logu chyb."
+
+#: src/Sites/Connector.php
+msgid "This is not a valid Warp key. Copy the whole key from the Settings tab of the other site."
+msgstr "Tohle není platný klíč Warpu. Zkopírujte celý klíč ze záložky Nastavení druhého webu."
+
+#: src/Sites/Connector.php
+msgid "The IP address is not valid."
+msgstr "IP adresa není platná."

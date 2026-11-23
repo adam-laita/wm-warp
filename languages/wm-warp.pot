@@ -22,6 +22,34 @@ msgstr ""
 msgid "WebManiak"
 msgstr ""
 
+#. translators: %s: name of the connected site.
+#: src/Admin/Actions.php
+msgid "The site %s is connected."
+msgstr ""
+
+#. translators: %s: name of the site.
+#: src/Admin/Actions.php
+msgid "The site %s is disconnected."
+msgstr ""
+
+#. translators: %s: name of the site.
+#: src/Admin/Actions.php
+msgid "The site %s is disconnected here, but it could not be reached. Remove this site in the Settings tab of the other site as well."
+msgstr ""
+
+#: src/Admin/Actions.php
+msgid "A new key was generated. The old key no longer works; connected sites keep working."
+msgstr ""
+
+#. translators: %s: name of the site.
+#: src/Admin/Actions.php
+msgid "The site %s can no longer connect to this site."
+msgstr ""
+
+#: src/Admin/Actions.php src/Admin/AdminPage.php
+msgid "You do not have permission to access this page."
+msgstr ""
+
 #: src/Admin/AdminPage.php
 msgid "Warp"
 msgstr ""
@@ -35,10 +63,6 @@ msgid "Settings"
 msgstr ""
 
 #: src/Admin/AdminPage.php
-msgid "You do not have permission to access this page."
-msgstr ""
-
-#: src/Admin/AdminPage.php
 msgid "Pull and push the database and files between your WordPress sites."
 msgstr ""
 
@@ -46,30 +70,259 @@ msgstr ""
 msgid "Warp sections"
 msgstr ""
 
-#: src/Admin/AdminPage.php
-msgid "No sites connected yet"
+#: src/Admin/SettingsView.php
+msgid "Key of this site"
 msgstr ""
 
-#: src/Admin/AdminPage.php
-msgid "Connect another site with Warp installed, then pull or push its database and files in a few clicks."
+#: src/Admin/SettingsView.php
+msgid "Paste it on the other site in Connect a new site. The key is used only to make a connection; keep it private, anyone with the key can connect to this site."
 msgstr ""
 
-#: src/Admin/AdminPage.php
+#: src/Admin/SettingsView.php
+msgid "Copied"
+msgstr ""
+
+#: src/Admin/SettingsView.php
+msgid "Copy"
+msgstr ""
+
+#: src/Admin/SettingsView.php
+msgid "Generate a new key? The current key stops working; connected sites keep working."
+msgstr ""
+
+#: src/Admin/SettingsView.php
+msgid "Generate a new key"
+msgstr ""
+
+#: src/Admin/SettingsView.php
+msgid "Sites connected to this site"
+msgstr ""
+
+#: src/Admin/SettingsView.php
+msgid "No other site is connected to this site."
+msgstr ""
+
+#: src/Admin/SettingsView.php src/Admin/SitesView.php
+msgid "Site"
+msgstr ""
+
+#: src/Admin/SettingsView.php src/Admin/SitesView.php
+msgid "Connected"
+msgstr ""
+
+#: src/Admin/SettingsView.php
+msgid "Last request"
+msgstr ""
+
+#: src/Admin/SettingsView.php src/Admin/SitesView.php
+msgid "Actions"
+msgstr ""
+
+#. translators: %s: name of the site.
+#: src/Admin/SettingsView.php
+msgid "Remove %s? It will no longer be able to pull from or push to this site."
+msgstr ""
+
+#: src/Admin/SettingsView.php
+msgid "Remove"
+msgstr ""
+
+#: src/Admin/SettingsView.php
 msgid "Warp version"
 msgstr ""
 
-#: src/Admin/AdminPage.php
+#: src/Admin/SettingsView.php
 msgid "WordPress version"
 msgstr ""
 
-#: src/Admin/AdminPage.php
+#: src/Admin/SettingsView.php
 msgid "PHP version"
 msgstr ""
 
-#: src/Admin/AdminPage.php
+#: src/Admin/SettingsView.php
 msgid "Database server"
 msgstr ""
 
-#: src/Admin/AdminPage.php
+#: src/Admin/SettingsView.php
 msgid "This site"
+msgstr ""
+
+#: src/Admin/SitesView.php
+msgid "No sites connected yet"
+msgstr ""
+
+#: src/Admin/SitesView.php
+msgid "Connect another site with Warp installed, then pull or push its database and files in a few clicks."
+msgstr ""
+
+#: src/Admin/SitesView.php
+msgid "Connect a new site"
+msgstr ""
+
+#: src/Admin/SitesView.php
+msgid "You will need the key of the other site: Tools → Warp → Settings on that site."
+msgstr ""
+
+#. translators: %s: Warp version on the other site.
+#: src/Admin/SitesView.php
+msgid "Warp %s"
+msgstr ""
+
+#. translators: %s: name of the site.
+#: src/Admin/SitesView.php
+msgid "Disconnect %s? To connect it again you will need its key."
+msgstr ""
+
+#: src/Admin/SitesView.php
+msgid "Disconnect"
+msgstr ""
+
+#: src/Admin/SitesView.php
+msgid "Key of the other site"
+msgstr ""
+
+#: src/Admin/SitesView.php
+msgid "On the other site: Tools → Warp → Settings → Copy."
+msgstr ""
+
+#: src/Admin/SitesView.php
+msgid "Server password (optional)"
+msgstr ""
+
+#: src/Admin/SitesView.php
+msgid "Fill in only when the other site is protected by a server password (HTTP authentication), typically a development or staging site."
+msgstr ""
+
+#: src/Admin/SitesView.php
+msgid "User name"
+msgstr ""
+
+#: src/Admin/SitesView.php
+msgid "Password"
+msgstr ""
+
+#: src/Admin/SitesView.php
+msgid "Moving a site to another hosting with the same domain?"
+msgstr ""
+
+#: src/Admin/SitesView.php
+msgid "IP address of the other server"
+msgstr ""
+
+#: src/Admin/SitesView.php
+msgid "Warp then connects to this server instead of the one the domain leads to, like an entry in the hosts file on your computer. Leave empty otherwise."
+msgstr ""
+
+#: src/Admin/SitesView.php
+msgid "Connect anyway, without checking the certificate"
+msgstr ""
+
+#: src/Admin/SitesView.php
+msgid "Use only when you know why the certificate is invalid, e.g. a new hosting before the domain is moved. Warp data stay signed and encrypted; only the server password could be exposed."
+msgstr ""
+
+#: src/Admin/SitesView.php
+msgid "Connect"
+msgstr ""
+
+#: src/Admin/SitesView.php
+msgid "Cancel"
+msgstr ""
+
+#: src/Api/Client.php
+msgid "The address of the other site leads back to this site. If you are moving a site to another hosting with the same domain, enter the IP address of the other server."
+msgstr ""
+
+#: src/Api/Client.php
+msgid "A different site with Warp answered at this address. The domain probably leads to another server; enter the IP address of the right server."
+msgstr ""
+
+#: src/Api/Client.php src/Sites/Connector.php
+msgid "The other site sent an unexpected response. A firewall, proxy or security plugin may be changing the communication."
+msgstr ""
+
+#. translators: %s: domain of the other site.
+#: src/Api/Client.php
+msgid "The HTTPS certificate of %s could not be verified (expired, self-signed or issued for another domain)."
+msgstr ""
+
+#. translators: %s: domain of the other site.
+#: src/Api/Client.php
+msgid "The domain %s cannot be found. Check the key; if the site is not in public DNS yet, enter the IP address of its server."
+msgstr ""
+
+#. translators: %s: domain of the other site.
+#: src/Api/Client.php
+msgid "The site %s did not answer in time. Check that it is running and reachable from this server."
+msgstr ""
+
+#. translators: %s: domain of the other site.
+#: src/Api/Client.php
+msgid "This server cannot reach %s. Check that the site is running and reachable from the internet; a local site can only connect to others, it cannot be connected to."
+msgstr ""
+
+#. translators: %s: address the other site redirects to.
+#: src/Api/Client.php
+msgid "The other site redirects to %s. Copy the key again from the site at its current address."
+msgstr ""
+
+#: src/Api/Client.php
+msgid "The other site is protected by a server password (HTTP authentication). Enter the user name and password."
+msgstr ""
+
+#: src/Api/Client.php
+msgid "The server password (HTTP authentication) of the other site is wrong. Check the user name and password."
+msgstr ""
+
+#: src/Api/Client.php
+msgid "The key is no longer valid; a new key was probably generated on the other site. Copy the current key from its Settings tab."
+msgstr ""
+
+#: src/Api/Client.php
+msgid "The other site no longer accepts this connection; it was probably removed there. Disconnect the site and connect it again."
+msgstr ""
+
+#: src/Api/Client.php src/Sites/Connector.php
+msgid "This is the key of this site. Paste the key of the other site."
+msgstr ""
+
+#: src/Api/Client.php
+msgid "The other site temporarily blocked requests from this server after too many failed attempts. Try again in 15 minutes."
+msgstr ""
+
+#: src/Api/Client.php src/Sites/Connector.php
+msgid "The versions of Warp on the two sites are not compatible. Update Warp on both sites to the same version."
+msgstr ""
+
+#: src/Api/Client.php
+msgid "The REST API of the other site is open only to logged-in users (a plugin or setting restricts it), or Warp is not active there. Check that Warp is active and allow the wm-warp/v1 namespace in that plugin."
+msgstr ""
+
+#: src/Api/Client.php
+msgid "The other site cannot write to the folder wp-content/wm-warp. Check the folder permissions on its server."
+msgstr ""
+
+#: src/Api/Client.php
+msgid "Warp is not active on the other site, or it is an older version. Install and activate Warp there."
+msgstr ""
+
+#: src/Api/Client.php
+msgid "The REST API of the other site is not available. Check that Warp is active there and that the REST API is not disabled by a plugin or the server."
+msgstr ""
+
+#: src/Api/Client.php
+msgid "The other site refused the request. A security plugin or the hosting firewall (WAF) may block the REST API or requests from this server."
+msgstr ""
+
+#. translators: %d: HTTP status code.
+#: src/Api/Client.php
+msgid "The other site responded with an error (HTTP %d). Check its PHP error log."
+msgstr ""
+
+#: src/Sites/Connector.php
+msgid "This is not a valid Warp key. Copy the whole key from the Settings tab of the other site."
+msgstr ""
+
+#: src/Sites/Connector.php
+msgid "The IP address is not valid."
 msgstr ""
