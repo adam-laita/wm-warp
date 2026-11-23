@@ -1,0 +1,52 @@
+{
+	"name": "webmaniak/wm-warp",
+	"description": "Data migration and synchronization between WordPress sites.",
+	"type": "wordpress-plugin",
+	"license": "GPL-2.0-or-later",
+	"homepage": "https://webmaniak.cz",
+	"require": {
+		"php": ">=8.3"
+	},
+	"require-dev": {
+		"dealerdirect/phpcodesniffer-composer-installer": "^1.0",
+		"phpcompatibility/phpcompatibility-wp": "^2.1",
+		"phpstan/phpstan": "^2.1",
+		"phpunit/phpunit": "^12.0",
+		"szepeviktor/phpstan-wordpress": "^2.0",
+		"wp-coding-standards/wpcs": "^3.1"
+	},
+	"autoload-dev": {
+		"psr-4": {
+			"WM\\Warp\\": "src/",
+			"WM\\Warp\\Tests\\": "tests/"
+		}
+	},
+	"config": {
+		"platform": {
+			"php": "8.3.0"
+		},
+		"sort-packages": true,
+		"allow-plugins": {
+			"dealerdirect/phpcodesniffer-composer-installer": true
+		}
+	},
+	"scripts": {
+		"lint": "phpcs",
+		"analyse": "phpstan analyse --memory-limit=1G --no-progress",
+		"test": "phpunit",
+		"i18n": "@php bin/i18n.php",
+		"i18n-check": "@php bin/i18n.php --check",
+		"check": [
+			"@lint",
+			"@analyse",
+			"@test",
+			"@i18n-check"
+		],
+		"fix": "phpcbf"
+	},
+	"scripts-descriptions": {
+		"check": "Run all checks: coding standards, static analysis, tests and translations.",
+		"fix": "Fix coding standard violations automatically.",
+		"i18n": "Regenerate languages/wm-warp.pot, merge it into the .po files and compile .mo files."
+	}
+}

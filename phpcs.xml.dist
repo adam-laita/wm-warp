@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<ruleset name="WM Warp">
+	<description>Coding standards for WM Warp.</description>
+
+	<file>wm-warp.php</file>
+	<file>src</file>
+	<file>bin</file>
+	<file>tests</file>
+
+	<arg name="extensions" value="php"/>
+	<arg name="colors"/>
+	<arg value="sp"/>
+	<arg name="parallel" value="8"/>
+
+	<config name="minimum_wp_version" value="6.6"/>
+	<config name="testVersion" value="8.3-"/>
+
+	<rule ref="WordPress">
+		<!-- Classes follow PSR-4 file names (src/Admin/AdminPage.php), not class-*.php. -->
+		<exclude name="WordPress.Files.FileName"/>
+	</rule>
+
+	<rule ref="WordPress.WP.I18n">
+		<properties>
+			<property name="text_domain" type="array">
+				<element value="wm-warp"/>
+			</property>
+		</properties>
+	</rule>
+
+	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">
+		<properties>
+			<property name="prefixes" type="array">
+				<element value="WM\Warp"/>
+				<element value="wm_warp"/>
+			</property>
+		</properties>
+	</rule>
+
+	<rule ref="PHPCompatibilityWP"/>
+
+	<!-- Command line tools and tests run outside WordPress. -->
+	<rule ref="WordPress.WP.AlternativeFunctions">
+		<exclude-pattern>bin/*</exclude-pattern>
+	</rule>
+	<rule ref="WordPress.Security.EscapeOutput">
+		<exclude-pattern>bin/*</exclude-pattern>
+	</rule>
+	<rule ref="WordPress.PHP.DiscouragedPHPFunctions">
+		<exclude-pattern>bin/*</exclude-pattern>
+	</rule>
+</ruleset>

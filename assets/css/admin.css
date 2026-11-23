@@ -1,0 +1,104 @@
+/**
+ * WM Warp – admin styles.
+ *
+ * Brand colours copied from the WebManiak theme (al-prime, assets/css/variables.css).
+ * Font: the WordPress admin system font.
+ */
+
+.wm-warp {
+	--wm-warp-purple-dark: 34, 23, 63;
+	--wm-warp-purple: 151, 139, 195;
+	--wm-warp-purple-light: 209, 184, 238;
+	--wm-warp-purple-lighter: 248, 241, 255;
+	--wm-warp-pink: 246, 58, 116;
+	--wm-warp-grey: 87, 98, 113;
+
+	max-width: 72rem;
+}
+
+.wm-warp__header {
+	margin: 1rem 0 1.25rem;
+	padding: 1.5rem 1.75rem;
+	border-radius: 0.75rem;
+	background: linear-gradient(135deg, rgb(var(--wm-warp-purple-dark)) 0%, rgb(43, 28, 62) 100%);
+	color: rgb(255, 255, 255);
+}
+
+.wm-warp__title {
+	margin: 0;
+	padding: 0;
+	color: inherit;
+	font-size: 1.75rem;
+	font-weight: 600;
+	line-height: 1.2;
+}
+
+.wm-warp__title::after {
+	content: "";
+	display: inline-block;
+	width: 0.45em;
+	height: 0.45em;
+	margin-left: 0.25em;
+	border-radius: 50%;
+	background: rgb(var(--wm-warp-pink));
+}
+
+.wm-warp__subtitle {
+	margin: 0.5rem 0 0;
+	color: rgb(var(--wm-warp-purple-light));
+	font-size: 0.95rem;
+}
+
+.wm-warp__tabs .nav-tab-active,
+.wm-warp__tabs .nav-tab-active:hover,
+.wm-warp__tabs .nav-tab-active:focus {
+	border-bottom-color: rgb(240, 240, 241);
+	color: rgb(var(--wm-warp-purple-dark));
+	box-shadow: inset 0 3px 0 rgb(var(--wm-warp-pink));
+}
+
+.wm-warp__content {
+	margin-top: 1.25rem;
+}
+
+.wm-warp__empty,
+.wm-warp__card {
+	padding: 1.5rem 1.75rem;
+	border: 1px solid rgb(var(--wm-warp-purple-light));
+	border-radius: 0.75rem;
+	background: rgb(255, 255, 255);
+}
+
+.wm-warp__empty {
+	background: rgb(var(--wm-warp-purple-lighter));
+	text-align: center;
+}
+
+.wm-warp__empty h2,
+.wm-warp__card h2 {
+	margin-top: 0;
+	color: rgb(var(--wm-warp-purple-dark));
+}
+
+.wm-warp__empty p {
+	max-width: 36rem;
+	margin: 0 auto;
+	color: rgb(var(--wm-warp-grey));
+	font-size: 0.95rem;
+}
+
+.wm-warp__facts {
+	border-collapse: collapse;
+}
+
+.wm-warp__facts th,
+.wm-warp__facts td {
+	padding: 0.4rem 1.5rem 0.4rem 0;
+	text-align: left;
+	vertical-align: top;
+}
+
+.wm-warp__facts th {
+	color: rgb(var(--wm-warp-grey));
+	font-weight: 400;
+}

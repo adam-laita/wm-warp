@@ -3,6 +3,7 @@
 /CLAUDE.md
 /CHANGELOG.md
 /docs/rozhodnuti.md
+/docs/build-plan.md
 
 # Lokální konfigurace AI a MCP (mohou obsahovat přístupové údaje)
 .mcp.json
@@ -26,3 +27,7 @@ Thumbs.db
 desktop.ini
 .idea/
 *.log
+
+# Testy
+.phpunit.result.cache
+.phpunit.cache/
