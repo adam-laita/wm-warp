@@ -124,6 +124,7 @@ function run( array $args ): int {
 	foreach ( false === $po_files ? array() : $po_files as $po_file ) {
 		$locale       = substr( basename( $po_file, '.po' ), strlen( DOMAIN ) + 1 );
 		$plural_forms = PLURAL_FORMS[ $locale ] ?? 'nplurals=2; plural=(n != 1);';
+		$nplurals     = nplurals( $plural_forms );
 		$existing     = parse_po( (string) file_get_contents( $po_file ) );
 		$merged       = array();
 
@@ -131,7 +132,7 @@ function run( array $args ): int {
 			$entry['msgstr'] = $existing[ $key ]['msgstr'] ?? array();
 			$merged[ $key ]  = $entry;
 
-			if ( ! is_translated( $entry ) ) {
+			if ( ! is_translated( $entry, $nplurals ) ) {
 				$problems[] = sprintf( '%s: missing translation for "%s"', basename( $po_file ), $entry['msgid'] );
 			}
 		}
@@ -147,7 +148,7 @@ function run( array $args ): int {
 		);
 
 		$base       = substr( $po_file, 0, -3 );
-		$expected[] = array( $po_file, write_po( $merged, $header ) );
+		$expected[] = array( $po_file, write_po( $merged, $header, $nplurals ) );
 		$expected[] = array( $base . '.mo', write_mo( $merged, $header ) );
 		$expected[] = array( $base . '.l10n.php', write_l10n_php( $merged, $locale, $plural_forms ) );
 	}
@@ -384,12 +385,22 @@ function entry_key( ?string $context, string $msgid ): string {
 }
 
 /**
+ * Number of plural forms from a Plural-Forms header.
+ *
+ * @param string $plural_forms Plural forms.
+ */
+function nplurals( string $plural_forms ): int {
+	return preg_match( '/nplurals=(\d+)/', $plural_forms, $m ) ? (int) $m[1] : 2;
+}
+
+/**
  * Whether an entry has all translations filled in.
  *
- * @param array<string, mixed> $entry Entry.
+ * @param array<string, mixed> $entry    Entry.
+ * @param int                  $nplurals Number of plural forms of the language.
  */
-function is_translated( array $entry ): bool {
-	$forms = null === $entry['msgid_plural'] ? 1 : 2;
+function is_translated( array $entry, int $nplurals ): bool {
+	$forms = null === $entry['msgid_plural'] ? 1 : $nplurals;
 	$strs  = $entry['msgstr'];
 
 	if ( count( $strs ) < $forms ) {
@@ -475,9 +486,10 @@ function parse_po( string $content ): array {
  * Writes a .po or .pot file.
  *
  * @param array<string, array<string, mixed>> $entries Entries.
- * @param array<string, string>               $header  Header fields.
+ * @param array<string, string>               $header   Header fields.
+ * @param int                                 $nplurals Number of plural forms (2 for the template).
  */
-function write_po( array $entries, array $header ): string {
+function write_po( array $entries, array $header, int $nplurals = 2 ): string {
 	$header_text = '';
 	foreach ( $header as $name => $value ) {
 		$header_text .= $name . ': ' . $value . "\n";
@@ -505,7 +517,7 @@ function write_po( array $entries, array $header ): string {
 		}
 
 		$out  .= 'msgid_plural "' . po_escape( $entry['msgid_plural'] ) . "\"\n";
-		$forms = max( 2, count( $entry['msgstr'] ) );
+		$forms = max( $nplurals, count( $entry['msgstr'] ) );
 		for ( $n = 0; $n < $forms; $n++ ) {
 			$out .= 'msgstr[' . $n . '] "' . po_escape( $entry['msgstr'][ $n ] ?? '' ) . "\"\n";
 		}
@@ -528,7 +540,7 @@ function write_mo( array $entries, array $header ): string {
 
 	$messages = array( '' => $header_text );
 	foreach ( $entries as $key => $entry ) {
-		if ( ! is_translated( $entry ) ) {
+		if ( ! is_translated( $entry, nplurals( $header['Plural-Forms'] ?? '' ) ) ) {
 			continue;
 		}
 		$original              = null === $entry['msgid_plural'] ? $key : $key . "\0" . $entry['msgid_plural'];
@@ -569,7 +581,7 @@ function write_mo( array $entries, array $header ): string {
 function write_l10n_php( array $entries, string $locale, string $plural_forms ): string {
 	$messages = array();
 	foreach ( $entries as $key => $entry ) {
-		if ( is_translated( $entry ) ) {
+		if ( is_translated( $entry, nplurals( $plural_forms ) ) ) {
 			$messages[ $key ] = implode( "\0", $entry['msgstr'] );
 		}
 	}

@@ -2,13 +2,13 @@
 
 Data migration and synchronization between WordPress sites, by [WebManiak](https://webmaniak.cz).
 
-> Early development. Not ready for use yet.
+## Features
 
-## Goals
-
-- Push and pull the database between two WordPress sites.
-- Find and replace URLs and paths, including serialized data.
-- Transfer media, themes and plugins.
+- Pull and push the database between two WordPress sites.
+- Find and replace addresses and paths, including serialized data and JSON.
+- Pull and push media, themes and plugins; only changed files are transferred.
+- Undo until the migration is confirmed.
+- Sites connect with a key; requests are signed and encrypted. HTTP authentication and the server IP address are supported.
 
 ## Requirements
 
@@ -16,6 +16,24 @@ Data migration and synchronization between WordPress sites, by [WebManiak](https
 - WordPress 6.6 or newer.
 - MySQL or MariaDB.
 - The plugin must be installed on both the source and the target site.
+
+## Installation and updates
+
+Download `wm-warp.zip` from the [latest release](https://github.com/adam-laita/wm-warp/releases/latest) and upload it in Plugins → Add New → Upload Plugin. New versions then appear among the usual WordPress updates (the plugin checks the GitHub releases twice a day and verifies the SHA-256 of the downloaded package).
+
+## Support
+
+WM Warp is made for the needs of WebManiak and is provided as is, without any warranty. Issues, questions and feature requests are not handled and pull requests are not accepted. If you need something different, you are welcome to fork the plugin.
+
+## Credits
+
+Big thanks to **WP Migrate** (Delicious Brains / WP Engine) and **WP Synchro**. For years they were the tools of choice here – the author even helped extend WP Synchro with feedback – and WM Warp takes a lot of inspiration from both. In the end the needs grew different enough to start a plugin of its own. Thanks also to **DevKit Pro** (dPlugins), whose Sync module was another source of inspiration.
+
+WM Warp is original code; no code was copied from these plugins.
+
+## License
+
+[GPL-2.0-or-later](LICENSE).
 
 ## Development
 
@@ -31,3 +49,9 @@ composer i18n    # regenerate languages/*.pot, merge into .po files, compile .mo
 ```
 
 Every user-facing text is written in English and translated to Czech in `languages/wm-warp-cs_CZ.po` (edit `msgstr`, then run `composer i18n`).
+
+### Releasing
+
+1. Set the same version in the plugin header (`Version`), the `VERSION` constant in `wm-warp.php` and `Stable tag` in `readme.txt`.
+2. Create an annotated tag with the release notes as its message and push it: `git tag -a v0.1.0 -F notes.md && git push origin v0.1.0`.
+3. GitHub Actions checks the versions, runs `composer check`, builds `wm-warp.zip` with `git archive` (development files are left out by `.gitattributes`) and publishes the release with the ZIP and its SHA-256.

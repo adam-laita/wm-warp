@@ -1,0 +1,48 @@
+# Publishes a release when a version tag (v1.2.3) is pushed: checks versions and code,
+# builds wm-warp.zip with git archive and attaches it with its SHA-256 (docs: README, Releasing).
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check versions
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          header=$(sed -n 's/^ \* Version:[[:space:]]*//p' wm-warp.php)
+          constant=$(sed -n "s/^const VERSION[[:space:]]*= '\(.*\)';/\1/p" wm-warp.php)
+          stable=$(sed -n 's/^Stable tag:[[:space:]]*//p' readme.txt)
+          echo "tag=$version header=$header constant=$constant readme=$stable"
+          test "$header" = "$version" && test "$constant" = "$version" && test "$stable" = "$version"
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          tools: composer:v2
+
+      - name: Checks
+        run: |
+          composer install --no-interaction --no-progress
+          composer check
+
+      - name: Build
+        run: |
+          git archive --format=zip --prefix=wm-warp/ -o wm-warp.zip HEAD
+          sha256sum wm-warp.zip > wm-warp.zip.sha256
+          unzip -l wm-warp.zip | tail -1
+          cat wm-warp.zip.sha256
+
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" wm-warp.zip wm-warp.zip.sha256 --title "WM Warp ${GITHUB_REF_NAME#v}" --notes-from-tag --verify-tag

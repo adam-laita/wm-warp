@@ -28,6 +28,7 @@ final class Envelope {
 	private const FORMAT        = 1;
 	private const FLAG_DEFLATED = 1;
 	private const FLAG_PAYLOAD  = 2;
+	private const SAMPLE        = 65536;
 
 	/**
 	 * Encodes data.
@@ -48,7 +49,7 @@ final class Envelope {
 			$flags |= self::FLAG_PAYLOAD;
 		}
 
-		$deflated = $deflate ? gzdeflate( $json, 1 ) : false;
+		$deflated = $deflate && self::worth_deflating( $payload ) ? gzdeflate( $json, 1 ) : false;
 
 		if ( false !== $deflated && strlen( $deflated ) < strlen( $json ) ) {
 			$json   = $deflated;
@@ -125,6 +126,26 @@ final class Envelope {
 			'data'    => $result,
 			'payload' => $binary,
 		);
+	}
+
+	/**
+	 * Whether a large payload compresses at all, judged by a sample from its middle.
+	 *
+	 * Random or already compressed data with an unknown extension would cost ~15 ms per MB for nothing.
+	 *
+	 * @param string $payload Binary payload.
+	 */
+	public static function worth_deflating( string $payload ): bool {
+		$length = strlen( $payload );
+
+		if ( $length < 4 * self::SAMPLE ) {
+			return true;
+		}
+
+		$sample   = substr( $payload, intdiv( $length - self::SAMPLE, 2 ), self::SAMPLE );
+		$deflated = gzdeflate( $sample, 1 );
+
+		return false === $deflated || strlen( $deflated ) < 0.9 * self::SAMPLE;
 	}
 
 	/**

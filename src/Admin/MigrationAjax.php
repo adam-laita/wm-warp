@@ -328,13 +328,34 @@ final class MigrationAjax {
 		$text = sprintf( __( 'Transferred %1$s in %2$s.', 'wm-warp' ), self::size( (int) $state['bytes'] ), self::duration( $seconds ) );
 
 		if ( null !== $summary ) {
-			/* translators: 1: number of tables, 2: number of rows. */
-			$text .= ' ' . sprintf( __( 'Database: %1$s tables, %2$s rows.', 'wm-warp' ), self::number( (int) ( $summary['tables'] ?? 0 ) ), self::number( (int) ( $summary['rows'] ?? 0 ) ) );
+			$tables = (int) ( $summary['tables'] ?? 0 );
+			$rows   = (int) ( $summary['rows'] ?? 0 );
+			$parts  = array(
+				/* translators: %s: number of tables. */
+				sprintf( _n( '%s table', '%s tables', $tables, 'wm-warp' ), self::number( $tables ) ),
+				/* translators: %s: number of rows. */
+				sprintf( _n( '%s row', '%s rows', $rows, 'wm-warp' ), self::number( $rows ) ),
+			);
+			/* translators: %s: list of counts, e.g. "116 tables, 333,753 rows". */
+			$text .= ' ' . sprintf( __( 'Database: %s.', 'wm-warp' ), implode( ', ', $parts ) );
 		}
 
 		if ( null !== $files ) {
-			/* translators: 1: number of files, 2: number of deleted files, 3: number of plugins and themes. */
-			$text .= ' ' . sprintf( __( 'Files: %1$s changed, %2$s deleted, %3$s plugins and themes replaced.', 'wm-warp' ), self::number( (int) $files['files'] ), self::number( (int) $files['deleted'] ), self::number( (int) $files['items'] ) );
+			$changed = (int) $files['files'];
+			$deleted = (int) $files['deleted'];
+			$items   = (int) $files['items'];
+			$parts   = array(
+				/* translators: %s: number of files. */
+				sprintf( _n( '%s file changed', '%s files changed', $changed, 'wm-warp' ), self::number( $changed ) ),
+				/* translators: %s: number of files. */
+				sprintf( _n( '%s file deleted', '%s files deleted', $deleted, 'wm-warp' ), self::number( $deleted ) ),
+			);
+			if ( $items > 0 ) {
+				/* translators: %s: number of plugins and themes. */
+				$parts[] = sprintf( _n( '%s plugin or theme replaced', '%s plugins and themes replaced', $items, 'wm-warp' ), self::number( $items ) );
+			}
+			/* translators: %s: list of counts, e.g. "12 files changed, 0 files deleted". */
+			$text .= ' ' . sprintf( __( 'Files: %s.', 'wm-warp' ), implode( ', ', $parts ) );
 		}
 
 		if ( null === $summary ) {

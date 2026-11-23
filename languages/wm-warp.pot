@@ -181,14 +181,49 @@ msgstr ""
 msgid "Transferred %1$s in %2$s."
 msgstr ""
 
-#. translators: 1: number of tables, 2: number of rows.
+#. translators: %s: number of tables.
 #: src/Admin/MigrationAjax.php
-msgid "Database: %1$s tables, %2$s rows."
+msgid "%s table"
+msgid_plural "%s tables"
+msgstr[0] ""
+msgstr[1] ""
+
+#. translators: %s: number of rows.
+#: src/Admin/MigrationAjax.php
+msgid "%s row"
+msgid_plural "%s rows"
+msgstr[0] ""
+msgstr[1] ""
+
+#. translators: %s: list of counts, e.g. "116 tables, 333,753 rows".
+#: src/Admin/MigrationAjax.php
+msgid "Database: %s."
 msgstr ""
 
-#. translators: 1: number of files, 2: number of deleted files, 3: number of plugins and themes.
+#. translators: %s: number of files.
 #: src/Admin/MigrationAjax.php
-msgid "Files: %1$s changed, %2$s deleted, %3$s plugins and themes replaced."
+msgid "%s file changed"
+msgid_plural "%s files changed"
+msgstr[0] ""
+msgstr[1] ""
+
+#. translators: %s: number of files.
+#: src/Admin/MigrationAjax.php
+msgid "%s file deleted"
+msgid_plural "%s files deleted"
+msgstr[0] ""
+msgstr[1] ""
+
+#. translators: %s: number of plugins and themes.
+#: src/Admin/MigrationAjax.php
+msgid "%s plugin or theme replaced"
+msgid_plural "%s plugins and themes replaced"
+msgstr[0] ""
+msgstr[1] ""
+
+#. translators: %s: list of counts, e.g. "12 files changed, 0 files deleted".
+#: src/Admin/MigrationAjax.php
+msgid "Files: %s."
 msgstr ""
 
 #. translators: 1: collation of the source, 2: collation used instead.
@@ -843,4 +878,51 @@ msgstr ""
 
 #: src/Sites/Connector.php
 msgid "The IP address is not valid."
+msgstr ""
+
+#: src/Updates/Updater.php
+msgid "Data migration and synchronization between WordPress sites: database, media, themes and plugins, with find & replace and undo."
+msgstr ""
+
+#: src/Updates/Updater.php
+msgid "No release notes."
+msgstr ""
+
+#: src/Updates/Updater.php
+msgid "The checksum of the WM Warp update could not be downloaded. Try again later."
+msgstr ""
+
+#: src/Updates/Updater.php
+msgid "The downloaded update of WM Warp is damaged (its checksum does not match), so it was not installed. Try again later."
+msgstr ""
+
+#: src/Updates/Updater.php
+msgid "Check for updates"
+msgstr ""
+
+#: src/Updates/Updater.php
+msgid "You are not allowed to update plugins."
+msgstr ""
+
+#. translators: %s: version number.
+#: src/Updates/Updater.php
+msgid "WM Warp %s is available. Update it in the list below."
+msgstr ""
+
+#. translators: %s: version number.
+#: src/Updates/Updater.php
+msgid "WM Warp is up to date (version %s)."
+msgstr ""
+
+#. translators: %s: reason, e.g. "HTTP 404".
+#: src/Updates/Updater.php
+msgid "Checking for WM Warp updates failed: %s"
+msgstr ""
+
+#: src/Updates/Updater.php
+msgid "no published release was found"
+msgstr ""
+
+#: src/Updates/Updater.php
+msgid "the latest release has no wm-warp.zip with a checksum"
 msgstr ""

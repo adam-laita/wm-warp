@@ -183,15 +183,55 @@ msgstr "%1$s za %2$s (%3$s/s)"
 msgid "Transferred %1$s in %2$s."
 msgstr "Přeneseno %1$s za %2$s."
 
-#. translators: 1: number of tables, 2: number of rows.
+#. translators: %s: number of tables.
 #: src/Admin/MigrationAjax.php
-msgid "Database: %1$s tables, %2$s rows."
-msgstr "Databáze: %1$s tabulek, %2$s řádků."
+msgid "%s table"
+msgid_plural "%s tables"
+msgstr[0] "%s tabulka"
+msgstr[1] "%s tabulky"
+msgstr[2] "%s tabulek"
 
-#. translators: 1: number of files, 2: number of deleted files, 3: number of plugins and themes.
+#. translators: %s: number of rows.
 #: src/Admin/MigrationAjax.php
-msgid "Files: %1$s changed, %2$s deleted, %3$s plugins and themes replaced."
-msgstr "Soubory: %1$s změněno, %2$s smazáno, %3$s pluginů a šablon vyměněno."
+msgid "%s row"
+msgid_plural "%s rows"
+msgstr[0] "%s řádek"
+msgstr[1] "%s řádky"
+msgstr[2] "%s řádků"
+
+#. translators: %s: list of counts, e.g. "116 tables, 333,753 rows".
+#: src/Admin/MigrationAjax.php
+msgid "Database: %s."
+msgstr "Databáze: %s."
+
+#. translators: %s: number of files.
+#: src/Admin/MigrationAjax.php
+msgid "%s file changed"
+msgid_plural "%s files changed"
+msgstr[0] "změněn %s soubor"
+msgstr[1] "změněny %s soubory"
+msgstr[2] "změněno %s souborů"
+
+#. translators: %s: number of files.
+#: src/Admin/MigrationAjax.php
+msgid "%s file deleted"
+msgid_plural "%s files deleted"
+msgstr[0] "smazán %s soubor"
+msgstr[1] "smazány %s soubory"
+msgstr[2] "smazáno %s souborů"
+
+#. translators: %s: number of plugins and themes.
+#: src/Admin/MigrationAjax.php
+msgid "%s plugin or theme replaced"
+msgid_plural "%s plugins and themes replaced"
+msgstr[0] "vyměněn %s plugin nebo šablona"
+msgstr[1] "vyměněny %s pluginy a šablony"
+msgstr[2] "vyměněno %s pluginů a šablon"
+
+#. translators: %s: list of counts, e.g. "12 files changed, 0 files deleted".
+#: src/Admin/MigrationAjax.php
+msgid "Files: %s."
+msgstr "Soubory: %s."
 
 #. translators: 1: collation of the source, 2: collation used instead.
 #: src/Admin/MigrationAjax.php
@@ -846,3 +886,50 @@ msgstr "Tohle není platný klíč Warpu. Zkopírujte celý klíč ze záložky 
 #: src/Sites/Connector.php
 msgid "The IP address is not valid."
 msgstr "IP adresa není platná."
+
+#: src/Updates/Updater.php
+msgid "Data migration and synchronization between WordPress sites: database, media, themes and plugins, with find & replace and undo."
+msgstr "Migrace a synchronizace dat mezi weby ve WordPressu: databáze, média, šablony a pluginy, s náhradou textu a možností vrátit zpět."
+
+#: src/Updates/Updater.php
+msgid "No release notes."
+msgstr "Bez poznámek k vydání."
+
+#: src/Updates/Updater.php
+msgid "The checksum of the WM Warp update could not be downloaded. Try again later."
+msgstr "Kontrolní součet aktualizace WM Warp se nepodařilo stáhnout. Zkuste to později."
+
+#: src/Updates/Updater.php
+msgid "The downloaded update of WM Warp is damaged (its checksum does not match), so it was not installed. Try again later."
+msgstr "Stažená aktualizace WM Warp je poškozená (nesedí kontrolní součet), proto se nenainstalovala. Zkuste to později."
+
+#: src/Updates/Updater.php
+msgid "Check for updates"
+msgstr "Zkontrolovat aktualizace"
+
+#: src/Updates/Updater.php
+msgid "You are not allowed to update plugins."
+msgstr "Nemáte oprávnění aktualizovat pluginy."
+
+#. translators: %s: version number.
+#: src/Updates/Updater.php
+msgid "WM Warp %s is available. Update it in the list below."
+msgstr "Je k dispozici WM Warp %s. Aktualizujte ho v seznamu níže."
+
+#. translators: %s: version number.
+#: src/Updates/Updater.php
+msgid "WM Warp is up to date (version %s)."
+msgstr "WM Warp je aktuální (verze %s)."
+
+#. translators: %s: reason, e.g. "HTTP 404".
+#: src/Updates/Updater.php
+msgid "Checking for WM Warp updates failed: %s"
+msgstr "Kontrola aktualizací WM Warp selhala: %s"
+
+#: src/Updates/Updater.php
+msgid "no published release was found"
+msgstr "nenašlo se žádné zveřejněné vydání"
+
+#: src/Updates/Updater.php
+msgid "the latest release has no wm-warp.zip with a checksum"
+msgstr "poslední vydání nemá wm-warp.zip s kontrolním součtem"

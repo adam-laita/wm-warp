@@ -18,6 +18,7 @@ use WM\Warp\Api\RestController;
 use WM\Warp\Security\Vault;
 use WM\Warp\Sites\ConnectionStore;
 use WM\Warp\Sites\SiteIdentity;
+use WM\Warp\Updates\Updater;
 
 /**
  * Wires the plugin into WordPress.
@@ -71,6 +72,7 @@ final class Plugin {
 
 		Maintenance::register();
 		Loader::register();
+		Updater::register();
 	}
 
 	/**
