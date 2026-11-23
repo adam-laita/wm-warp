@@ -15,6 +15,7 @@ use WM\Warp\Migration\Runner;
 use WM\Warp\Sites\ConnectionStore;
 use WM\Warp\Sites\Connector;
 use WM\Warp\Sites\SiteIdentity;
+use WM\Warp\Support\Log;
 
 /**
  * Handles admin-post.php actions: connect and disconnect a site, new key, remove a connected site.
@@ -116,6 +117,18 @@ final class Actions {
 				'1' === $allow_insecure
 			);
 		} catch ( ClientError $error ) {
+			Log::error(
+				'connect',
+				$error->getMessage(),
+				array(
+					'reason'  => $error->reason,
+					'field'   => $error->field,
+					'details' => $error->details + array(
+						'auth'     => '' !== $form['auth_user'],
+						'insecure' => '1' === $allow_insecure,
+					),
+				)
+			);
 			$this->flash->set( 'error', $error->getMessage(), $error->field, $form, $error->reason );
 			$this->redirect( array( 'view' => 'connect' ) );
 		}

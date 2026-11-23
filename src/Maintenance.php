@@ -11,6 +11,7 @@ namespace WM\Warp;
 
 use WM\Warp\Migration\Target;
 use WM\Warp\Migration\Runner;
+use WM\Warp\Support\Log;
 
 /**
  * A migration that nobody confirmed is confirmed automatically after 7 days, so the set-aside tables
@@ -51,6 +52,10 @@ final class Maintenance {
 			}
 
 			Runner::expire( $limit );
+
+			if ( wp_doing_cron() ) {
+				Log::cleanup();
+			}
 		} catch ( \Throwable $error ) {
 			unset( $error );
 		}

@@ -155,11 +155,18 @@ final class SitesView {
 					</div>
 				</fieldset>
 
-				<details class="wm-warp__field wm-warp__advanced<?php echo 'ip' === $field ? ' wm-warp__field--error' : ''; ?>"<?php echo $ip_open ? ' open' : ''; ?>>
+				<details class="wm-warp__field wm-warp__advanced<?php echo 'ip' === $field ? ' wm-warp__field--error' : ''; ?>"<?php echo $ip_open ? ' open' : ''; ?> data-wm-warp-probe data-ajax="<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>" data-action="<?php echo esc_attr( ConnectProbe::ACTION ); ?>" data-nonce="<?php echo esc_attr( wp_create_nonce( ConnectProbe::ACTION ) ); ?>">
 					<summary><?php esc_html_e( 'Moving a site to another hosting with the same domain?', 'wm-warp' ); ?></summary>
 					<label for="wm-warp-ip"><?php esc_html_e( 'IP address of the other server', 'wm-warp' ); ?></label>
-					<input type="text" id="wm-warp-ip" name="ip" value="<?php echo esc_attr( $ip ); ?>" class="regular-text" inputmode="decimal" autocomplete="off" aria-describedby="wm-warp-ip-help"<?php echo 'ip' === $field ? ' aria-invalid="true"' : ''; ?>>
+					<input type="text" id="wm-warp-ip" name="ip" value="<?php echo esc_attr( $ip ); ?>" class="regular-text" inputmode="decimal" autocomplete="off" aria-describedby="wm-warp-ip-help wm-warp-ip-cloudflare"<?php echo 'ip' === $field ? ' aria-invalid="true"' : ''; ?>>
 					<p id="wm-warp-ip-help" class="description"><?php esc_html_e( 'Warp then connects to this server instead of the one the domain leads to, like an entry in the hosts file on your computer. Leave empty otherwise.', 'wm-warp' ); ?></p>
+					<div id="wm-warp-ip-cloudflare" aria-live="polite">
+						<p class="wm-warp__hint" data-wm-warp-probe-ip hidden><?php esc_html_e( 'This IP address belongs to Cloudflare. Enter the IP address of the hosting behind Cloudflare instead.', 'wm-warp' ); ?></p>
+						<p class="wm-warp__hint" data-wm-warp-probe-site hidden>
+							<?php esc_html_e( 'This site is behind Cloudflare. Enter the IP address of the hosting, not of Cloudflare.', 'wm-warp' ); ?>
+							<span class="wm-warp__hint-more"><?php esc_html_e( 'You find it in Cloudflare under DNS as the A record of the domain, or in the details from the hosting.', 'wm-warp' ); ?></span>
+						</p>
+					</div>
 				</details>
 
 				<?php if ( 'tls' === $reason ) : ?>

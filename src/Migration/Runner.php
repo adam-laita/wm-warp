@@ -30,6 +30,8 @@ use WM\Warp\Sites\Connection;
 use WM\Warp\Sites\ConnectionStore;
 use WM\Warp\Sites\Connector;
 use WM\Warp\Sites\SiteIdentity;
+use WM\Warp\Support\Log;
+use WM\Warp\Support\LogEntry;
 use WM\Warp\Support\Storage;
 
 /**
@@ -249,6 +251,7 @@ final class Runner {
 			$state['status']   = self::CANCELLED;
 			$state['finished'] = time();
 			$this->save( $state );
+			self::log_result( $state );
 		}
 
 		return $state;
@@ -491,6 +494,8 @@ final class Runner {
 		$state['finished'] = time();
 		$state['summary']  = $summary;
 
+		self::log_result( $state );
+
 		return $state;
 	}
 
@@ -538,6 +543,8 @@ final class Runner {
 			++$state['retries'];
 			$state['budget'] = max( self::MIN_BUDGET, intdiv( (int) $state['budget'], 4 ) );
 
+			Log::warning( (string) $state['direction'], $error->getMessage(), self::log_context( $state, $error ) + array( 'retry' => $state['retries'] ) );
+
 			return $state;
 		}
 
@@ -571,10 +578,113 @@ final class Runner {
 			'details' => $details,
 		);
 
+		Log::error(
+			(string) $state['direction'],
+			$state['error']['message'],
+			self::log_context( $state, $error ) + array(
+				'environment' => array(
+					'local'  => Environment::describe( $this->identity->site_id(), true ),
+					'remote' => $this->remote_environment( $state ),
+				),
+				'remote_log'  => $this->remote_log( $state, $error ),
+			)
+		);
+		self::log_result( $state );
+
 		$this->abort_target( $state );
 		FileRun::cleanup();
 
 		return $state;
+	}
+
+	/**
+	 * What the log needs to know about an error of this run.
+	 *
+	 * @param array<string, mixed> $state State.
+	 * @param \Throwable           $error Error.
+	 * @return array<string, mixed>
+	 */
+	private static function log_context( array $state, \Throwable $error ): array {
+		$details = array(
+			'exception' => get_class( $error ),
+			'where'     => basename( $error->getFile() ) . ':' . $error->getLine(),
+		);
+
+		if ( $error instanceof ClientError ) {
+			$details += $error->details;
+		} elseif ( $error instanceof DatabaseError ) {
+			$details['sql'] = LogEntry::statement( $error->sql );
+		}
+
+		$table = 'tables' === $state['phase'] ? ( $state['tables'][ (int) $state['index'] ]['info']['name'] ?? '' ) : '';
+		$files = is_array( $state['files'] ?? null ) ? $state['files'] : array();
+
+		return array(
+			'run'     => (string) $state['id'],
+			'peer'    => (string) $state['host'],
+			'phase'   => (string) $state['phase'],
+			'step'    => 'files' === $state['phase'] ? (string) ( $files['step'] ?? '' ) : '',
+			'table'   => is_string( $table ) ? $table : '',
+			'reason'  => $error instanceof ClientError ? $error->reason : '',
+			'details' => $details,
+		);
+	}
+
+	/**
+	 * One line about how the run ended.
+	 *
+	 * @param array<string, mixed> $state State.
+	 */
+	private static function log_result( array $state ): void {
+		Log::result(
+			(string) $state['direction'],
+			(string) $state['status'],
+			array(
+				'run'     => (string) $state['id'],
+				'peer'    => (string) $state['host'],
+				'details' => array(
+					'database' => (bool) $state['database'],
+					'files'    => is_array( $state['files'] ) ? array_map( static fn( array $group ): string => $group['mode'], FileRun::groups( $state['files'] ) ) : array(),
+					'tables'   => count( (array) $state['tables'] ),
+					'rows'     => (int) $state['rows'],
+					'bytes'    => (int) $state['bytes'],
+					'seconds'  => max( 0, (int) $state['finished'] - (int) $state['started'] ),
+				),
+			)
+		);
+	}
+
+	/**
+	 * Environment of the other site from the last handshake (with its plugins).
+	 *
+	 * @param array<string, mixed> $state State.
+	 * @return array<string, mixed>
+	 */
+	private function remote_environment( array $state ): array {
+		$connection = $this->outgoing->get( (string) $state['connection'] );
+
+		return null === $connection ? array() : $connection->remote;
+	}
+
+	/**
+	 * Errors the other site logged for this run, when the error came from there.
+	 *
+	 * @param array<string, mixed> $state State.
+	 * @param \Throwable           $error Error.
+	 * @return list<array<string, mixed>>
+	 */
+	private function remote_log( array $state, \Throwable $error ): array {
+		if ( ! $error instanceof ClientError || ! in_array( $error->reason, array( 'migration', 'remote_error', 'bad_response', 'storage' ), true ) ) {
+			return array();
+		}
+
+		try {
+			$entries = $this->remote( $state, 'log/run', array( 'run_id' => $state['id'] ), '', 15 )['data']['entries'] ?? array();
+		} catch ( \Throwable $failure ) {
+			return array();
+		}
+
+		return is_array( $entries ) ? array_values( array_filter( $entries, 'is_array' ) ) : array();
 	}
 
 	/**
@@ -627,6 +737,9 @@ final class Runner {
 		if ( null === $connection ) {
 			throw new ClientError( 'revoked', __( 'The site of this migration is no longer connected.', 'wm-warp' ) );
 		}
+
+		// Every request names the run, so the other site can log its own errors under the same ID.
+		$data += array( 'run_id' => (string) $state['id'] );
 
 		return ( new Client( $this->identity->site_id() ) )->exchange( Endpoint::of( $connection ), $action, $data, $connection->secret, $connection->id, $connection->site_id, $payload, $timeout, $deflate );
 	}
@@ -839,12 +952,13 @@ final class Runner {
 	}
 
 	/**
-	 * Saves the state.
+	 * Saves the state, with the shown percentage that never goes back.
 	 *
-	 * @param array<string, mixed> $state State.
+	 * @param array<string, mixed> $state State; updated in place.
 	 */
-	private function save( array $state ): void {
+	private function save( array &$state ): void {
 		$state['updated'] = time();
+		$state['percent'] = max( (int) ( $state['percent'] ?? 0 ), Progress::percent( $state ) );
 		Storage::write_json( self::STATE_DIR, self::STATE_NAME, $state );
 	}
 

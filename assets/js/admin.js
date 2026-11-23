@@ -55,6 +55,61 @@
 		} );
 	} );
 
+	// IP address of the other server: hints about Cloudflare while the section is open.
+	document.querySelectorAll( '[data-wm-warp-probe]' ).forEach( function ( section ) {
+		var form = section.closest( 'form' );
+		var key = form ? form.querySelector( '[name="key"]' ) : null;
+		var ip = section.querySelector( '[name="ip"]' );
+		var siteHint = section.querySelector( '[data-wm-warp-probe-site]' );
+		var ipHint = section.querySelector( '[data-wm-warp-probe-ip]' );
+		var timer = 0;
+		var asked = '';
+
+		if ( ! key || ! ip || ! siteHint || ! ipHint ) {
+			return;
+		}
+
+		var probe = function () {
+			var query = key.value.trim() + '\n' + ip.value.trim();
+
+			if ( ! section.open || '' === key.value.trim() || query === asked ) {
+				return;
+			}
+
+			asked = query;
+
+			var body = new FormData();
+			body.append( 'action', section.getAttribute( 'data-action' ) );
+			body.append( 'nonce', section.getAttribute( 'data-nonce' ) );
+			body.append( 'key', key.value.trim() );
+			body.append( 'ip', ip.value.trim() );
+
+			fetch( section.getAttribute( 'data-ajax' ), { method: 'POST', body: body, credentials: 'same-origin' } )
+				.then( function ( response ) {
+					return response.json();
+				} )
+				.then( function ( result ) {
+					if ( result && result.success && query === asked ) {
+						siteHint.hidden = ! result.data.site;
+						ipHint.hidden = ! result.data.ip;
+					}
+				} )
+				.catch( function () {
+					// Hints only; connecting works without them.
+				} );
+		};
+
+		var later = function () {
+			window.clearTimeout( timer );
+			timer = window.setTimeout( probe, 400 );
+		};
+
+		section.addEventListener( 'toggle', probe );
+		key.addEventListener( 'change', probe );
+		ip.addEventListener( 'input', later );
+		probe();
+	} );
+
 	// Migration: the form starts it, then the page calls the server step by step until it ends.
 	document.querySelectorAll( '[data-wm-warp-migration]' ).forEach( function ( root ) {
 		var form = root.querySelector( '[data-wm-warp-migration-form]' );

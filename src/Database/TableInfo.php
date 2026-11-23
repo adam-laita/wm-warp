@@ -33,6 +33,8 @@ final class TableInfo {
 	 * @phpstan-param list<string> $key
 	 * @param int                                                      $rows    Estimated number of rows.
 	 * @param int                                                      $bytes   Estimated size of data in bytes.
+	 * @param int                                                      $low     Smallest value of a single integer key (for progress), 0 when unknown.
+	 * @param int                                                      $high    Largest value of a single integer key, 0 when unknown.
 	 */
 	public function __construct(
 		public readonly string $name,
@@ -40,7 +42,9 @@ final class TableInfo {
 		public readonly array $columns,
 		public readonly array $key,
 		public readonly int $rows,
-		public readonly int $bytes
+		public readonly int $bytes,
+		public readonly int $low = 0,
+		public readonly int $high = 0
 	) {}
 
 	/**
@@ -116,6 +120,8 @@ final class TableInfo {
 			'key'     => $this->key,
 			'rows'    => $this->rows,
 			'bytes'   => $this->bytes,
+			'low'     => $this->low,
+			'high'    => $this->high,
 		);
 	}
 
@@ -151,6 +157,6 @@ final class TableInfo {
 			$key[] = $column;
 		}
 
-		return new self( $data['name'], $data['create'], $columns, $key, (int) ( $data['rows'] ?? 0 ), (int) ( $data['bytes'] ?? 0 ) );
+		return new self( $data['name'], $data['create'], $columns, $key, (int) ( $data['rows'] ?? 0 ), (int) ( $data['bytes'] ?? 0 ), (int) ( $data['low'] ?? 0 ), (int) ( $data['high'] ?? 0 ) );
 	}
 }

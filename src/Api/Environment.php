@@ -21,11 +21,14 @@ final class Environment {
 	/**
 	 * Description of this site.
 	 *
-	 * @param string $site_id ID of this site.
+	 * @param string $site_id      ID of this site.
+	 * @param bool   $with_plugins Add active plugins with versions (for the log).
 	 * @return array<string, mixed>
 	 */
-	public static function describe( string $site_id ): array {
+	public static function describe( string $site_id, bool $with_plugins = false ): array {
 		global $wpdb;
+
+		$plugins = $with_plugins ? array( 'plugins' => self::plugins() ) : array();
 
 		return array(
 			'protocol'    => Protocol::VERSION,
@@ -57,6 +60,34 @@ final class Environment {
 				)
 			),
 			'time'        => time(),
-		);
+			'loader'      => defined( 'WM_WARP_LOADER' ),
+		) + $plugins;
+	}
+
+	/**
+	 * Active plugins with versions ("folder/file.php" => version).
+	 *
+	 * Read from the database, because during a Warp request the loader (MU plugin) hides the other plugins.
+	 *
+	 * @return array<string, string>
+	 */
+	private static function plugins(): array {
+		global $wpdb;
+
+		$active = maybe_unserialize( (string) $wpdb->get_var( $wpdb->prepare( "SELECT option_value FROM {$wpdb->options} WHERE option_name = %s", 'active_plugins' ) ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- The option is filtered during Warp requests.
+		$active = is_array( $active ) ? array_values( array_filter( $active, 'is_string' ) ) : array();
+
+		if ( ! function_exists( 'get_plugins' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/plugin.php';
+		}
+
+		$all     = get_plugins();
+		$plugins = array();
+
+		foreach ( $active as $plugin ) {
+			$plugins[ $plugin ] = isset( $all[ $plugin ]['Version'] ) ? (string) $all[ $plugin ]['Version'] : '?';
+		}
+
+		return $plugins;
 	}
 }

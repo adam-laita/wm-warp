@@ -47,6 +47,13 @@ spl_autoload_register(
 	}
 );
 
-register_deactivation_hook( __FILE__, array( Maintenance::class, 'unschedule' ) );
+register_activation_hook( __FILE__, array( Loader::class, 'ensure' ) );
+register_deactivation_hook(
+	__FILE__,
+	static function (): void {
+		Maintenance::unschedule();
+		Loader::remove();
+	}
+);
 
 Plugin::instance()->register();

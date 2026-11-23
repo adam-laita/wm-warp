@@ -17,6 +17,7 @@ use WM\Warp\Files\Groups;
 use WM\Warp\Migration\Runner;
 use WM\Warp\Sites\ConnectionStore;
 use WM\Warp\Sites\SiteIdentity;
+use WM\Warp\Support\Log;
 
 /**
  * Endpoint of admin-ajax.php the browser uses to run a migration step by step:
@@ -69,9 +70,19 @@ final class MigrationAjax {
 				'rollback' => $runner->rollback(),
 				default    => throw new \RuntimeException( __( 'Unknown command.', 'wm-warp' ) ),
 			};
-		} catch ( ClientError $error ) {
-			wp_send_json_error( array( 'message' => $error->getMessage() ) );
 		} catch ( \Throwable $error ) {
+			Log::error(
+				'migration',
+				$error->getMessage(),
+				array(
+					'command' => $command,
+					'reason'  => $error instanceof ClientError ? $error->reason : '',
+					'details' => array(
+						'exception' => get_class( $error ),
+						'where'     => basename( $error->getFile() ) . ':' . $error->getLine(),
+					) + ( $error instanceof ClientError ? $error->details : array() ),
+				)
+			);
 			wp_send_json_error( array( 'message' => $error->getMessage() ) );
 		}
 
@@ -228,27 +239,9 @@ final class MigrationAjax {
 	public static function progress( array $state ): array {
 		$tables  = is_array( $state['tables'] ?? null ) ? $state['tables'] : array();
 		$files   = is_array( $state['files'] ?? null ) ? $state['files'] : null;
-		$total   = 0;
-		$done    = 0;
-		$current = '';
-
-		foreach ( $tables as $index => $entry ) {
-			$estimate = max( 1, (int) ( $entry['info']['bytes'] ?? 0 ) );
-			$total   += $estimate;
-			$done    += $entry['done'] ? $estimate : min( (int) ( $estimate * 0.99 ), (int) $entry['bytes'] );
-
-			if ( (int) $state['index'] === $index ) {
-				$current = (string) ( $entry['info']['name'] ?? '' );
-			}
-		}
-
-		if ( null !== $files ) {
-			$total += (int) $files['total'];
-			$done  += min( (int) $files['total'], (int) $files['sent'] );
-		}
-
+		$current = (string) ( $tables[ (int) $state['index'] ]['info']['name'] ?? '' );
 		$status  = (string) $state['status'];
-		$percent = Runner::DONE === $status || Runner::CONFIRMED === $status || Runner::ROLLED_BACK === $status ? 100 : ( $total > 0 ? min( 99, (int) floor( 100 * $done / $total ) ) : 0 );
+		$percent = Runner::DONE === $status || Runner::CONFIRMED === $status || Runner::ROLLED_BACK === $status ? 100 : (int) ( $state['percent'] ?? 0 );
 		$end     = (int) $state['finished'] > 0 ? (int) $state['finished'] : time();
 		$error   = is_array( $state['error'] ?? null ) ? $state['error'] : null;
 

@@ -15,6 +15,8 @@ use WM\Warp\Sites\Connection;
 use WM\Warp\Sites\ConnectionStore;
 use WM\Warp\Sites\SiteIdentity;
 use WM\Warp\Support\Base64Url;
+use WM\Warp\Support\Log;
+use WM\Warp\Support\LogEntry;
 use WM\Warp\Support\Storage;
 
 /**
@@ -80,7 +82,7 @@ final class RestController {
 			);
 		}
 
-		foreach ( array_merge( DatabaseRoutes::ROUTES, FileRoutes::ROUTES ) as $route ) {
+		foreach ( array_merge( DatabaseRoutes::ROUTES, FileRoutes::ROUTES, array( 'log/run' ) ) as $route ) {
 			register_rest_route(
 				Protocol::REST_NAMESPACE,
 				'/' . $route,
@@ -108,15 +110,81 @@ final class RestController {
 			return new \WP_Error( 'wm_warp_bad_body', 'Invalid request body.', array( 'status' => 400 ) );
 		}
 
+		$run_id = is_string( $opened['data']['run_id'] ?? null ) && 1 === preg_match( '/^[a-f0-9]{32}$/', $opened['data']['run_id'] ) ? $opened['data']['run_id'] : '';
+		$peer   = $auth['connection']->host();
+
+		if ( 'log/run' === $route ) {
+			$entries = '' === $run_id ? array() : Log::entries( $run_id, 5 );
+			$entries = array_map(
+				static function ( array $entry ): array {
+					unset( $entry['environment'], $entry['remote_log'] );
+					return $entry;
+				},
+				array_values( array_filter( $entries, static fn( array $entry ): bool => Log::RESULT !== ( $entry['level'] ?? '' ) ) )
+			);
+
+			return new BinaryResponse( Envelope::seal( array( 'entries' => $entries ), $auth['secret'], Envelope::RESPONSE ) );
+		}
+
+		// A fatal error (memory, time) ends PHP without an exception; log it before the response is lost.
+		register_shutdown_function( array( self::class, 'log_fatal' ), $route, $run_id, $peer );
+
 		try {
 			$result = str_starts_with( $route, 'db/' )
 				? DatabaseRoutes::handle( $route, $opened['data'], $opened['payload'], $auth['connection'] )
 				: FileRoutes::handle( $route, $opened['data'], $opened['payload'], $auth['connection']->name );
 		} catch ( \Throwable $error ) {
+			Log::error(
+				'remote',
+				$error->getMessage(),
+				array(
+					'run'     => $run_id,
+					'peer'    => $peer,
+					'route'   => $route,
+					'details' => array(
+						'exception' => get_class( $error ),
+						'where'     => basename( $error->getFile() ) . ':' . $error->getLine(),
+						'sql'       => $error instanceof \WM\Warp\Database\DatabaseError ? LogEntry::statement( $error->sql ) : '',
+					),
+				)
+			);
+
 			return new \WP_Error( 'wm_warp_migration', $error->getMessage(), array( 'status' => 500 ) );
 		}
 
 		return new BinaryResponse( Envelope::seal( $result['data'], $auth['secret'], Envelope::RESPONSE, $result['payload'], $result['deflate'] ?? true ) );
+	}
+
+	/**
+	 * Logs a fatal PHP error that ended a migration request (shutdown function).
+	 *
+	 * @param string $route  Route.
+	 * @param string $run_id Run.
+	 * @param string $peer   Site that sent the request.
+	 */
+	public static function log_fatal( string $route, string $run_id, string $peer ): void {
+		$error = error_get_last();
+
+		if ( null === $error || 0 === ( $error['type'] & ( E_ERROR | E_PARSE | E_CORE_ERROR | E_COMPILE_ERROR | E_USER_ERROR | E_RECOVERABLE_ERROR ) ) ) {
+			return;
+		}
+
+		Log::error(
+			'remote',
+			$error['message'],
+			array(
+				'run'     => $run_id,
+				'peer'    => $peer,
+				'route'   => $route,
+				'reason'  => 'fatal',
+				'details' => array(
+					'where'  => basename( $error['file'] ) . ':' . $error['line'],
+					'memory' => memory_get_peak_usage( true ),
+					'limit'  => (string) ini_get( 'memory_limit' ),
+					'time'   => (int) ini_get( 'max_execution_time' ),
+				),
+			)
+		);
 	}
 
 	/**
@@ -276,7 +344,7 @@ final class RestController {
 		$connection->last_seen = time();
 		$this->incoming->save( $connection );
 
-		return $this->respond( array( 'environment' => Environment::describe( $this->identity->site_id() ) ), $auth['secret'] );
+		return $this->respond( array( 'environment' => Environment::describe( $this->identity->site_id(), true ) ), $auth['secret'] );
 	}
 
 	/**

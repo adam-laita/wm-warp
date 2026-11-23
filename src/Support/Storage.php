@@ -97,15 +97,27 @@ final class Storage {
 	}
 
 	/**
-	 * Path of a state file whose name cannot be guessed from outside (nginx serves files by exact name).
+	 * Path of a JSON state file.
 	 *
 	 * @param string $dir  Subfolder.
 	 * @param string $name Logical name.
 	 */
 	private static function state_file( string $dir, string $name ): ?string {
+		return self::file( $dir, $name, '', '.json' );
+	}
+
+	/**
+	 * Path of a file whose name cannot be guessed from outside (nginx serves files by exact name).
+	 *
+	 * @param string $dir       Subfolder.
+	 * @param string $name      Logical name.
+	 * @param string $prefix    Readable start of the file name, e.g. "log-".
+	 * @param string $extension Extension with the dot.
+	 */
+	public static function file( string $dir, string $name, string $prefix, string $extension ): ?string {
 		$path = self::dir( $dir );
 
-		return null === $path ? null : $path . substr( hash_hmac( 'sha256', $dir . '/' . $name, wp_salt( 'auth' ) ), 0, 32 ) . '.json';
+		return null === $path ? null : $path . $prefix . substr( hash_hmac( 'sha256', $dir . '/' . $name, wp_salt( 'auth' ) ), 0, 32 ) . $extension;
 	}
 
 	/**

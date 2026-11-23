@@ -639,6 +639,18 @@ msgid "Warp then connects to this server instead of the one the domain leads to,
 msgstr "Warp se pak připojí k tomuto serveru místo toho, kam vede doména, podobně jako záznam v souboru hosts na vašem počítači. Jinak nechte prázdné."
 
 #: src/Admin/SitesView.php
+msgid "This IP address belongs to Cloudflare. Enter the IP address of the hosting behind Cloudflare instead."
+msgstr "Tato IP adresa patří Cloudflare. Zadejte místo ní IP adresu hostingu, který je za Cloudflare."
+
+#: src/Admin/SitesView.php
+msgid "This site is behind Cloudflare. Enter the IP address of the hosting, not of Cloudflare."
+msgstr "Tento web je za Cloudflare. Zadejte IP adresu hostingu, ne Cloudflare."
+
+#: src/Admin/SitesView.php
+msgid "You find it in Cloudflare under DNS as the A record of the domain, or in the details from the hosting."
+msgstr "Najdete ji v Cloudflare v části DNS jako záznam A domény, nebo v údajích od hostingu."
+
+#: src/Admin/SitesView.php
 msgid "Connect anyway, without checking the certificate"
 msgstr "Přesto připojit, bez ověření certifikátu"
 

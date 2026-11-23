@@ -11,6 +11,7 @@ namespace WM\Warp\Api;
 
 use WM\Warp\Protocol;
 use WM\Warp\Support\Base64Url;
+use WM\Warp\Support\Log;
 
 /**
  * Sends signed and encrypted requests and turns every failure into a human readable ClientError.
@@ -67,6 +68,7 @@ final class Client {
 	 * @throws ClientError When the request fails.
 	 */
 	public function exchange( Endpoint $endpoint, string $action, array $data, string $secret, string $connection_id, string $site_id, string $payload = '', int $timeout = self::TIMEOUT, bool $deflate = true ): array {
+		$started  = microtime( true );
 		$body     = Envelope::seal( $data, $secret, Envelope::REQUEST, $payload, $deflate );
 		$route    = '/' . Protocol::REST_NAMESPACE . '/' . $action;
 		$response = $this->post( $endpoint, $action, $route, $body, $secret, $connection_id, 0, $timeout );
@@ -77,7 +79,40 @@ final class Client {
 			$response = $this->post( $endpoint, $action, $route, $body, $secret, $connection_id, $server_time - time(), $timeout );
 		}
 
-		return $this->read( $response, $endpoint, $secret, $connection_id, $site_id );
+		try {
+			$result = $this->read( $response, $endpoint, $secret, $connection_id, $site_id );
+		} catch ( ClientError $error ) {
+			self::debug( $endpoint, $action, $body, $response, $started, $error->reason );
+			throw $error;
+		}
+
+		self::debug( $endpoint, $action, $body, $response, $started, '' );
+
+		return $result;
+	}
+
+	/**
+	 * Records the request in the debug log (only with WM_WARP_DEBUG).
+	 *
+	 * @param Endpoint                       $endpoint Endpoint.
+	 * @param string                         $action   Route below the namespace.
+	 * @param string                         $body     Request body.
+	 * @param array<string, mixed>|\WP_Error $response Response.
+	 * @param float                          $started  Start time.
+	 * @param string                         $reason   Reason of the failure, empty when it succeeded.
+	 */
+	private static function debug( Endpoint $endpoint, string $action, string $body, array|\WP_Error $response, float $started, string $reason ): void {
+		Log::debug(
+			array(
+				'host'     => $endpoint->host(),
+				'action'   => $action,
+				'sent'     => strlen( $body ),
+				'received' => is_wp_error( $response ) ? 0 : strlen( wp_remote_retrieve_body( $response ) ),
+				'status'   => is_wp_error( $response ) ? $response->get_error_message() : (int) wp_remote_retrieve_response_code( $response ),
+				'ms'       => (int) round( ( microtime( true ) - $started ) * 1000 ),
+				'failed'   => $reason,
+			)
+		);
 	}
 
 	/**
@@ -202,10 +237,13 @@ final class Client {
 		$body      = wp_remote_retrieve_body( $response );
 		$answering = self::header( $response, strtolower( Protocol::HEADER_SITE ) );
 		$details   = array(
-			'status'  => $status,
-			'site'    => $answering,
-			'server'  => self::header( $response, 'server' ),
-			'excerpt' => mb_substr( wp_strip_all_tags( $body ), 0, 300 ),
+			'url'        => $endpoint->rest_url,
+			'ip'         => $endpoint->ip,
+			'status'     => $status,
+			'site'       => $answering,
+			'headers'    => self::headers( $response ),
+			'cloudflare' => self::behind_cloudflare( $response ),
+			'excerpt'    => $status >= 200 && $status < 300 ? '' : Log::excerpt( $body ),
 		);
 
 		if ( '' !== $answering && $answering === $this->own_site_id ) {
@@ -252,7 +290,11 @@ final class Client {
 	 */
 	private function transport_error( \WP_Error $error, Endpoint $endpoint ): ClientError {
 		$message = $error->get_error_message();
-		$details = array( 'error' => $message );
+		$details = array(
+			'url'   => $endpoint->rest_url,
+			'ip'    => $endpoint->ip,
+			'error' => $message,
+		);
 		$host    = $endpoint->host();
 
 		if ( 1 === preg_match( '/cURL error (35|51|53|54|58|59|60|77|80|82|83|90|91)\b|SSL|certificate/i', $message ) ) {
@@ -390,6 +432,35 @@ final class Client {
 			'',
 			$details
 		);
+	}
+
+	/**
+	 * Whether the response came through Cloudflare.
+	 *
+	 * @param array<string, mixed> $response Response.
+	 */
+	public static function behind_cloudflare( array $response ): bool {
+		return 'cloudflare' === strtolower( self::header( $response, 'server' ) ) || '' !== self::header( $response, 'cf-ray' );
+	}
+
+	/**
+	 * Response headers that help to find out who answered (server, proxy, WAF), for the log.
+	 *
+	 * @param array<string, mixed> $response Response.
+	 * @return array<string, string>
+	 */
+	private static function headers( array $response ): array {
+		$headers = array();
+
+		foreach ( array( 'server', 'x-powered-by', 'content-type', 'www-authenticate', 'location', 'cf-ray', 'x-sucuri-id', 'x-litespeed-cache' ) as $name ) {
+			$value = self::header( $response, $name );
+
+			if ( '' !== $value ) {
+				$headers[ $name ] = mb_substr( $value, 0, 200 );
+			}
+		}
+
+		return $headers;
 	}
 
 	/**

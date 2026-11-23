@@ -219,6 +219,20 @@
 	border-color: rgb(var(--wm-warp-pink));
 }
 
+.wm-warp__hint {
+	margin: 0.5rem 0 0;
+	padding: 0.5rem 0.75rem;
+	border-left: 4px solid rgb(219, 166, 23);
+	background: rgb(252, 249, 232);
+}
+
+.wm-warp__hint-more {
+	display: block;
+	margin-top: 0.25rem;
+	color: rgb(80, 87, 94);
+	font-size: 0.9em;
+}
+
 .wm-warp__insecure {
 	padding: 0.75rem 1rem;
 	border-left: 4px solid rgb(219, 166, 23);

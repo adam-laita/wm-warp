@@ -637,6 +637,18 @@ msgid "Warp then connects to this server instead of the one the domain leads to,
 msgstr ""
 
 #: src/Admin/SitesView.php
+msgid "This IP address belongs to Cloudflare. Enter the IP address of the hosting behind Cloudflare instead."
+msgstr ""
+
+#: src/Admin/SitesView.php
+msgid "This site is behind Cloudflare. Enter the IP address of the hosting, not of Cloudflare."
+msgstr ""
+
+#: src/Admin/SitesView.php
+msgid "You find it in Cloudflare under DNS as the A record of the domain, or in the details from the hosting."
+msgstr ""
+
+#: src/Admin/SitesView.php
 msgid "Connect anyway, without checking the certificate"
 msgstr ""
 
