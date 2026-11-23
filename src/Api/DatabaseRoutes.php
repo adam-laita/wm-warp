@@ -80,34 +80,51 @@ final class DatabaseRoutes {
 	}
 
 	/**
-	 * One chunk of rows of a table.
+	 * Chunks of rows of one or more tables (Exporter::batch); the payload joins the encoded rows of all parts.
 	 *
-	 * @param array<string, mixed> $data Request data: table, cursor, budget.
+	 * @param array<string, mixed> $data Request data: parts (table, cursor), budget.
 	 * @return array{data: array<string, mixed>, payload: string}
-	 * @throws \UnexpectedValueException When the table does not exist.
+	 * @throws \UnexpectedValueException When a table does not exist.
 	 */
 	private static function export( array $data ): array {
-		$name  = is_string( $data['table'] ?? null ) ? $data['table'] : '';
 		$names = array_map( static fn( array $table ): string => $table['name'], Schema::tables() );
+		$parts = array();
 
-		if ( ! in_array( $name, $names, true ) ) {
-			throw new \UnexpectedValueException( 'The table does not exist on the source.' );
+		foreach ( is_array( $data['parts'] ?? null ) ? array_values( $data['parts'] ) : array() as $part ) {
+			$name = is_array( $part ) && is_string( $part['table'] ?? null ) ? $part['table'] : '';
+
+			if ( ! in_array( $name, $names, true ) ) {
+				throw new \UnexpectedValueException( 'The table does not exist on the source.' );
+			}
+
+			$parts[] = array( Schema::describe( $name ), is_array( $part['cursor'] ?? null ) ? self::string_keys( $part['cursor'] ) : array() );
 		}
 
-		$table  = Schema::describe( $name );
-		$cursor = is_array( $data['cursor'] ?? null ) ? self::string_keys( $data['cursor'] ) : array();
-		$budget = is_int( $data['budget'] ?? null ) ? max( 64 * 1024, min( 64 * 1024 * 1024, $data['budget'] ) ) : 1024 * 1024;
-		$chunk  = Exporter::chunk( $table, $cursor, $budget );
+		if ( array() === $parts ) {
+			throw new \UnexpectedValueException( 'No table to export.' );
+		}
 
-		return array(
-			'data'    => array(
-				'columns' => $table->data_column_names(),
+		$budget  = is_int( $data['budget'] ?? null ) ? max( 64 * 1024, min( 64 * 1024 * 1024, $data['budget'] ) ) : 1024 * 1024;
+		$meta    = array();
+		$payload = '';
+
+		foreach ( Exporter::batch( $parts, $budget ) as $chunk ) {
+			$encoded  = RowCodec::encode( $chunk['rows'] );
+			$payload .= $encoded;
+			$meta[]   = array(
+				'table'   => $chunk['table']->name,
+				'columns' => $chunk['table']->data_column_names(),
 				'count'   => count( $chunk['rows'] ),
 				'cursor'  => $chunk['cursor'],
 				'done'    => $chunk['done'],
 				'bytes'   => $chunk['bytes'],
-			),
-			'payload' => RowCodec::encode( $chunk['rows'] ),
+				'length'  => strlen( $encoded ),
+			);
+		}
+
+		return array(
+			'data'    => array( 'parts' => $meta ),
+			'payload' => $payload,
 		);
 	}
 
@@ -128,21 +145,40 @@ final class DatabaseRoutes {
 	}
 
 	/**
-	 * Writes rows on this site.
+	 * Writes rows of one or more tables on this site.
 	 *
-	 * @param array<string, mixed> $data    Request data: run_id, table, columns.
-	 * @param string               $payload Encoded rows.
+	 * @param array<string, mixed> $data    Request data: run_id, parts (table, columns, seq, length).
+	 * @param string               $payload Encoded rows of all parts, one after another.
 	 * @return array{data: array<string, mixed>}
+	 * @throws \UnexpectedValueException When the parts do not match the payload.
 	 */
 	private static function import( array $data, string $payload ): array {
-		$columns = array_values( array_filter( is_array( $data['columns'] ?? null ) ? $data['columns'] : array(), 'is_string' ) );
-		$rows    = '' === $payload ? array() : RowCodec::decode( $payload, count( $columns ) );
+		$run_id   = self::run_id( $data );
+		$offset   = 0;
+		$inserted = array();
 
-		return array(
-			'data' => array(
-				'inserted' => Importer::insert( self::run_id( $data ), is_string( $data['table'] ?? null ) ? $data['table'] : '', $columns, $rows, is_int( $data['seq'] ?? null ) ? $data['seq'] : 0 ),
-			),
-		);
+		foreach ( is_array( $data['parts'] ?? null ) ? array_values( $data['parts'] ) : array() as $part ) {
+			$part    = is_array( $part ) ? $part : array();
+			$columns = array_values( array_filter( is_array( $part['columns'] ?? null ) ? $part['columns'] : array(), 'is_string' ) );
+			$length  = is_int( $part['length'] ?? null ) ? $part['length'] : -1;
+
+			if ( $length < 0 || $offset + $length > strlen( $payload ) ) {
+				throw new \UnexpectedValueException( 'The row data does not match its description.' );
+			}
+
+			$bytes   = substr( $payload, $offset, $length );
+			$offset += $length;
+			$rows    = '' === $bytes ? array() : RowCodec::decode( $bytes, count( $columns ) );
+			$table   = is_string( $part['table'] ?? null ) ? $part['table'] : '';
+
+			$inserted[ $table ] = Importer::insert( $run_id, $table, $columns, $rows, is_int( $part['seq'] ?? null ) ? $part['seq'] : 0 );
+		}
+
+		if ( strlen( $payload ) !== $offset ) {
+			throw new \UnexpectedValueException( 'The row data does not match its description.' );
+		}
+
+		return array( 'data' => array( 'inserted' => $inserted ) );
 	}
 
 	/**

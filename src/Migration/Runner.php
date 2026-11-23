@@ -66,6 +66,13 @@ final class Runner {
 	private const MAX_RETRIES  = 3;
 
 	/**
+	 * Find & replace of the current step, built once.
+	 *
+	 * @var Replacer|null
+	 */
+	private ?Replacer $step_replacer = null;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param SiteIdentity    $identity Identity of this site.
@@ -123,11 +130,6 @@ final class Runner {
 			throw new \RuntimeException( __( 'Another migration is running on this site. Wait until it ends or cancel it.', 'wm-warp' ) );
 		}
 
-		if ( null !== $previous && self::DONE === $previous['status'] ) {
-			// A new migration confirms the previous one (its set-aside tables are deleted).
-			$this->confirm();
-		}
-
 		( new Connector( $this->identity, $this->outgoing ) )->handshake( $connection );
 		$this->outgoing->save( $connection );
 
@@ -179,6 +181,12 @@ final class Runner {
 			'error'         => null,
 			'summary'       => null,
 		);
+
+		if ( null !== $previous && self::DONE === $previous['status'] ) {
+			// A new migration confirms the previous one (its set-aside tables are deleted), but only once
+			// it can start: a refused start keeps Undo of the previous one.
+			$this->confirm();
+		}
 
 		$this->save( $state );
 
@@ -396,10 +404,11 @@ final class Runner {
 	}
 
 	/**
-	 * Transfers one chunk of the current table.
+	 * Transfers one chunk of the current table, together with the following small tables.
 	 *
 	 * @param array<string, mixed> $state State.
 	 * @return array<string, mixed>
+	 * @throws ClientError When the other site sends rows that do not match the request.
 	 */
 	private function transfer( array $state ): array {
 		$index = (int) $state['index'];
@@ -410,66 +419,128 @@ final class Runner {
 			return $state;
 		}
 
-		$entry       = $state['tables'][ $index ];
-		$table       = TableInfo::from_array( $entry['info'] );
-		$transformer = new RowTransformer( $this->replacer( $state ), $table, (string) $state['source_prefix'], (string) $state['target_prefix'] );
-		$budget      = (int) $state['budget'];
-		$started     = microtime( true );
+		// The current table and the ones after it: small tables share one request (Exporter::batch).
+		$tables = array();
+		foreach ( array_slice( $state['tables'], $index, Exporter::MAX_PARTS ) as $entry ) {
+			$tables[] = TableInfo::from_array( $entry['info'] );
+		}
+
+		$budget  = (int) $state['budget'];
+		$started = microtime( true );
+		$chunks  = array();
 
 		if ( self::PULL === $state['direction'] ) {
 			$response = $this->remote(
 				$state,
 				'db/export',
 				array(
-					'table'  => $table->name,
-					'cursor' => (object) $entry['cursor'],
+					'parts'  => array_map(
+						static fn( TableInfo $table, int $offset ): array => array(
+							'table'  => $table->name,
+							'cursor' => (object) $state['tables'][ $index + $offset ]['cursor'],
+						),
+						$tables,
+						array_keys( $tables )
+					),
 					'budget' => $budget,
 				)
 			);
-			$data     = $response['data'];
-			$columns  = array_values( array_filter( (array) ( $data['columns'] ?? array() ), 'is_string' ) );
-			$rows     = '' === $response['payload'] ? array() : RowCodec::decode( $response['payload'], count( $columns ) );
+			$offset   = 0;
 
-			Importer::insert( (string) $state['id'], $table->name, $columns, $transformer->apply( $rows ) );
+			foreach ( array_values( (array) ( $response['data']['parts'] ?? array() ) ) as $position => $part ) {
+				$part    = is_array( $part ) ? $part : array();
+				$table   = $tables[ $position ] ?? null;
+				$columns = array_values( array_filter( (array) ( $part['columns'] ?? array() ), 'is_string' ) );
+				$length  = (int) ( $part['length'] ?? -1 );
 
-			$cursor = is_array( $data['cursor'] ?? null ) ? $data['cursor'] : array();
-			$done   = true === ( $data['done'] ?? false );
-			$bytes  = (int) ( $data['bytes'] ?? 0 );
+				if ( null === $table || ( $part['table'] ?? '' ) !== $table->name || $length < 0 || $offset + $length > strlen( $response['payload'] ) ) {
+					throw new ClientError( 'bad_response', __( 'The other site sent an unexpected response. A firewall, proxy or security plugin may be changing the communication.', 'wm-warp' ) );
+				}
+
+				$bytes   = substr( $response['payload'], $offset, $length );
+				$offset += $length;
+				$rows    = $this->transformer( $state, $table )->apply( '' === $bytes ? array() : RowCodec::decode( $bytes, count( $columns ) ) );
+
+				Importer::insert( (string) $state['id'], $table->name, $columns, $rows );
+
+				$chunks[] = array(
+					'rows'   => count( $rows ),
+					'cursor' => is_array( $part['cursor'] ?? null ) ? $part['cursor'] : array(),
+					'done'   => true === ( $part['done'] ?? false ),
+					'bytes'  => (int) ( $part['bytes'] ?? 0 ),
+				);
+			}
 		} else {
-			$chunk = Exporter::chunk( $table, (array) $entry['cursor'], $budget );
-			$rows  = $transformer->apply( $chunk['rows'] );
+			$parts   = array();
+			$payload = '';
+			$batch   = Exporter::batch(
+				array_map(
+					static fn( TableInfo $table, int $offset ): array => array( $table, (array) $state['tables'][ $index + $offset ]['cursor'] ),
+					$tables,
+					array_keys( $tables )
+				),
+				$budget
+			);
+
+			foreach ( $batch as $position => $chunk ) {
+				$encoded  = RowCodec::encode( $this->transformer( $state, $chunk['table'] )->apply( $chunk['rows'] ) );
+				$payload .= $encoded;
+				$parts[]  = array(
+					'table'   => $chunk['table']->name,
+					'columns' => $chunk['table']->data_column_names(),
+					'seq'     => (int) ( $state['tables'][ $index + $position ]['chunks'] ?? 0 ) + 1,
+					'length'  => strlen( $encoded ),
+				);
+				$chunks[] = array(
+					'rows'   => count( $chunk['rows'] ),
+					'cursor' => $chunk['cursor'],
+					'done'   => $chunk['done'],
+					'bytes'  => $chunk['bytes'],
+				);
+			}
 
 			$this->remote(
 				$state,
 				'db/import',
 				array(
-					'run_id'  => $state['id'],
-					'table'   => $table->name,
-					'columns' => $table->data_column_names(),
-					'seq'     => (int) ( $entry['chunks'] ?? 0 ) + 1,
+					'run_id' => $state['id'],
+					'parts'  => $parts,
 				),
-				RowCodec::encode( $rows )
+				$payload
 			);
-
-			$cursor = $chunk['cursor'];
-			$done   = $chunk['done'];
-			$bytes  = $chunk['bytes'];
 		}
 
-		$entry['chunks']           = (int) ( $entry['chunks'] ?? 0 ) + 1;
-		$entry['cursor']           = $cursor;
-		$entry['rows']            += count( $rows );
-		$entry['bytes']           += $bytes;
-		$entry['done']             = $done;
-		$state['tables'][ $index ] = $entry;
-		$state['rows']            += count( $rows );
-		$state['bytes']           += $bytes;
-		$state['retries']          = 0;
-		$state['budget']           = self::adapt( $budget, microtime( true ) - $started, (int) $state['max_budget'] );
-
-		if ( $done ) {
-			++$state['index'];
+		if ( array() === $chunks ) {
+			throw new ClientError( 'bad_response', __( 'The other site sent an unexpected response. A firewall, proxy or security plugin may be changing the communication.', 'wm-warp' ) );
 		}
+
+		$total = 0;
+
+		foreach ( $chunks as $chunk ) {
+			$entry                     = $state['tables'][ $index ];
+			$entry['chunks']           = (int) ( $entry['chunks'] ?? 0 ) + 1;
+			$entry['cursor']           = $chunk['cursor'];
+			$entry['rows']            += $chunk['rows'];
+			$entry['bytes']           += $chunk['bytes'];
+			$entry['done']             = $chunk['done'];
+			$state['tables'][ $index ] = $entry;
+			$state['rows']            += $chunk['rows'];
+			$state['bytes']           += $chunk['bytes'];
+			$total                    += $chunk['bytes'];
+
+			if ( ! $chunk['done'] ) {
+				break;
+			}
+
+			++$index;
+		}
+
+		$state['index']   = $index;
+		$state['retries'] = 0;
+		// Only a batch that filled the budget says how fast a full chunk is.
+		$state['budget'] = $total >= intdiv( $budget, 2 ) || ! $chunks[ count( $chunks ) - 1 ]['done']
+			? self::adapt( $budget, microtime( true ) - $started, (int) $state['max_budget'] )
+			: $budget;
 
 		if ( ! isset( $state['tables'][ (int) $state['index'] ] ) ) {
 			$state['phase'] = is_array( $state['files'] ) ? 'files' : 'finish';
@@ -893,6 +964,18 @@ final class Runner {
 	}
 
 	/**
+	 * Find & replace and prefix change for the rows of a table.
+	 *
+	 * @param array<string, mixed> $state State.
+	 * @param TableInfo            $table Table.
+	 */
+	private function transformer( array $state, TableInfo $table ): RowTransformer {
+		$this->step_replacer ??= $this->replacer( $state );
+
+		return new RowTransformer( $this->step_replacer, $table, (string) $state['source_prefix'], (string) $state['target_prefix'] );
+	}
+
+	/**
 	 * Next chunk size: larger while chunks are quick, smaller when they are slow (target 3–8 s).
 	 *
 	 * @param int   $budget  Current size in bytes.
@@ -900,7 +983,7 @@ final class Runner {
 	 * @param int   $max     Largest size.
 	 */
 	public static function adapt( int $budget, float $seconds, int $max ): int {
-		if ( $seconds < 2.0 ) {
+		if ( $seconds < 3.0 ) {
 			$budget *= 2;
 		} elseif ( $seconds > 8.0 ) {
 			$budget = intdiv( $budget, 2 );

@@ -347,14 +347,22 @@ final class Replacer {
 			return;
 		}
 
-		$variants = array( array( $rule->find, $rule->replace ) );
-		$escaped  = self::json_escape( $rule->find );
+		// Plain text, JSON ("https:\/\/…"), JSON inside a JSON string ("https:\\\/\\\/…", page builders
+		// and form revisions) and for domains also the URL-encoded form ("https%3A%2F%2F…" in query strings).
+		$variants = array( $rule->find => $rule->replace );
+		$once     = self::json_escape( $rule->find );
+		$twice    = self::json_escape( $once );
 
-		if ( $escaped !== $rule->find ) {
-			$variants[] = array( $escaped, self::json_escape( $rule->replace ) );
+		$variants[ $once ]  = self::json_escape( $rule->replace );
+		$variants[ $twice ] = self::json_escape( self::json_escape( $rule->replace ) );
+
+		if ( $rule->domain ) {
+			$variants[ rawurlencode( $rule->find ) ] = rawurlencode( $rule->replace );
 		}
 
-		foreach ( $variants as [ $find, $replace ] ) {
+		foreach ( $variants as $find => $replace ) {
+			$find = (string) $find; // Same forms share one key, so each is replaced once.
+
 			if ( null !== $this->needles ) {
 				$this->needles[] = strtolower( $find );
 			}

@@ -19,6 +19,41 @@ final class Exporter {
 	private const MAX_ROWS = 20000;
 
 	/**
+	 * Most tables in one batch.
+	 */
+	public const MAX_PARTS = 64;
+
+	/**
+	 * Reads chunks of several tables in turn until the budget is used: small tables share one request.
+	 *
+	 * Every part except the last one is a finished table. The rows of the first part follow its cursor;
+	 * later tables start with the budget that is left.
+	 *
+	 * @param list<array{0: TableInfo, 1: array<string, mixed>}> $parts  Tables with their cursors, in order.
+	 * @param int                                                $budget Target size of the batch in bytes.
+	 * @param float                                              $seconds Stop starting new tables after this time.
+	 * @return list<array{table: TableInfo, rows: list<list<string|null>>, cursor: array<string, mixed>, done: bool, bytes: int}>
+	 * @throws DatabaseError When the database reports an error.
+	 */
+	public static function batch( array $parts, int $budget, float $seconds = 3.0 ): array {
+		$started = microtime( true );
+		$result  = array();
+		$used    = 0;
+
+		foreach ( array_slice( $parts, 0, self::MAX_PARTS ) as [ $table, $cursor ] ) {
+			$chunk    = self::chunk( $table, $cursor, max( 16 * 1024, $budget - $used ) );
+			$used    += $chunk['bytes'];
+			$result[] = array( 'table' => $table ) + $chunk;
+
+			if ( ! $chunk['done'] || $used >= $budget || microtime( true ) - $started > $seconds ) {
+				break;
+			}
+		}
+
+		return $result;
+	}
+
+	/**
 	 * Reads one chunk.
 	 *
 	 * @param TableInfo            $table  Table.

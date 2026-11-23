@@ -670,7 +670,7 @@ msgstr "Adresa druhého webu vede zpět na tento web. Pokud stěhujete web na ji
 msgid "A different site with Warp answered at this address. The domain probably leads to another server; enter the IP address of the right server."
 msgstr "Na této adrese odpověděl jiný web s Warpem. Doména nejspíš vede na jiný server, zadejte IP adresu správného serveru."
 
-#: src/Api/Client.php src/Sites/Connector.php
+#: src/Api/Client.php src/Migration/Runner.php src/Sites/Connector.php
 msgid "The other site sent an unexpected response. A firewall, proxy or security plugin may be changing the communication."
 msgstr "Druhý web poslal nečekanou odpověď. Komunikaci nejspíš mění firewall, proxy nebo bezpečnostní plugin."
 

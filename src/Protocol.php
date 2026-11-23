@@ -16,7 +16,7 @@ namespace WM\Warp;
  */
 final class Protocol {
 
-	public const VERSION = 1;
+	public const VERSION = 2;
 
 	public const REST_NAMESPACE = 'wm-warp/v1';
 

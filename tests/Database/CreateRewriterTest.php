@@ -74,4 +74,19 @@ final class CreateRewriterTest extends TestCase {
 		self::assertSame( 'wb_posts', TableNames::retarget( 'wp_posts', 'wp_', 'wb_' ) );
 		self::assertSame( 'other_wp_posts', TableNames::retarget( 'other_wp_posts', 'wp_', 'wb_' ) );
 	}
+
+	/**
+	 * The collation utf8_bin is utf8mb3_bin on MariaDB 10.6+: same collation, not reported as a change.
+	 */
+	public function test_utf8_alias_keeps_collation(): void {
+		$create = 'CREATE TABLE `wp_blc_links` (
+  `url` text CHARACTER SET utf8 COLLATE utf8_bin NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci';
+		$known  = static fn( string $collation ): bool => in_array( $collation, array( 'utf8mb3_bin', 'utf8mb3_general_ci' ), true );
+		$result = CreateRewriter::rewrite( $create, TableNames::temp( 'wp_blc_links' ), true, $known, 'wp_', 'wp_' );
+
+		self::assertStringContainsString( 'COLLATE utf8mb3_bin NOT NULL', $result['create'] );
+		self::assertStringContainsString( 'COLLATE=utf8mb3_general_ci', $result['create'] );
+		self::assertSame( array(), $result['collations'] );
+	}
 }

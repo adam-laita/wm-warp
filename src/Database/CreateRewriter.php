@@ -68,6 +68,13 @@ final class CreateRewriter {
 				$collation = $found[3];
 
 				if ( ! $has_collation( $collation ) ) {
+					$alias = self::alias( $collation );
+
+					// utf8_bin and utf8mb3_bin are the same collation under two names, nothing changes.
+					if ( null !== $alias && $has_collation( $alias ) ) {
+						return $found[1] . $found[2] . $alias;
+					}
+
 					$replacement              = self::fallback( $collation, $has_collation );
 					$collations[ $collation ] = $replacement;
 					$collation                = $replacement;
@@ -120,6 +127,25 @@ final class CreateRewriter {
 	 */
 	public static function constraint_name( string $clause ): string {
 		return 1 === preg_match( '/^CONSTRAINT\s+`((?:[^`]|``)+)`/i', $clause, $match ) ? str_replace( '``', '`', $match[1] ) : '';
+	}
+
+	/**
+	 * Other name of the same collation: utf8 is utf8mb3 (MariaDB 10.6+ and MySQL 8 list only utf8mb3_*).
+	 *
+	 * @param string $collation Collation.
+	 */
+	public static function alias( string $collation ): ?string {
+		$lower = strtolower( $collation );
+
+		if ( str_starts_with( $lower, 'utf8_' ) ) {
+			return 'utf8mb3_' . substr( $lower, 5 );
+		}
+
+		if ( str_starts_with( $lower, 'utf8mb3_' ) ) {
+			return 'utf8_' . substr( $lower, 8 );
+		}
+
+		return null;
 	}
 
 	/**

@@ -290,6 +290,10 @@
 			} );
 
 			request( 'start', data ).then( function ( progress ) {
+				// The new migration confirmed the waiting one; its notice would now act on the new one.
+				document.querySelectorAll( '.wm-warp__pending' ).forEach( function ( notice ) {
+					notice.remove();
+				} );
 				running = true;
 				render( progress );
 				show( 'progress' );

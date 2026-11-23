@@ -115,6 +115,17 @@ final class ReplacerTest extends TestCase {
 	}
 
 	/**
+	 * JSON inside a JSON string (form revisions, consent logs) and URL-encoded addresses in query strings.
+	 */
+	public function test_nested_json_and_url_encoded(): void {
+		$nested = '{"data":"{\"url\":\"https:\\\\\/\\\\\/warpb.local\\\\\/x\"}"}';
+		$query  = 'https://example.com/?site_url=https%3A%2F%2Fwarpb.local&v=1';
+
+		self::assertSame( '{"data":"{\"url\":\"https:\\\\\/\\\\\/warpa.local\\\\\/x\"}"}', $this->replacer()->replace( $nested ) );
+		self::assertSame( 'https://example.com/?site_url=https%3A%2F%2Fwarpa.local&v=1', $this->replacer()->replace( $query ) );
+	}
+
+	/**
 	 * JSON inside serialized data.
 	 */
 	public function test_json_in_serialized(): void {
