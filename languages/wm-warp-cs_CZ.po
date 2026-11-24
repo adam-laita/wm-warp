@@ -78,7 +78,7 @@ msgstr "Nastavení"
 
 #: src/Admin/AdminPage.php
 msgid "Pull and push the database and files between your WordPress sites."
-msgstr "Pull a Push databáze a souborů mezi vašimi weby na WordPressu."
+msgstr "Pull/Push databáze a souborů mezi vašimi WordPress weby."
 
 #. translators: %s: Warp version.
 #. translators: %s: Warp version on the other site.

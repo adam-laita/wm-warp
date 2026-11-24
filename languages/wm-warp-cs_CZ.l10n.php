@@ -109,7 +109,7 @@ return array (
     'Preparing plugins and themes…' => 'Připravuji pluginy a šablony…',
     'Preparing…' => 'Připravuji…',
     'Pull' => 'Pull',
-    'Pull and push the database and files between your WordPress sites.' => 'Pull a Push databáze a souborů mezi vašimi weby na WordPressu.',
+    'Pull and push the database and files between your WordPress sites.' => 'Pull/Push databáze a souborů mezi vašimi WordPress weby.',
     'Pull from %s' => 'Pull z %s',
     'Push' => 'Push',
     'Push to %s' => 'Push na %s',
