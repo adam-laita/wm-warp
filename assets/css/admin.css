@@ -320,35 +320,51 @@
 
 /* Empty state */
 
+/* Everything in one centred column with even gaps. */
 .wm-warp__empty {
-	padding: 3rem 1.5rem;
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+	align-items: center;
+	padding: 3.5rem 1.5rem;
 	text-align: center;
 }
 
 .wm-warp .wm-warp__empty-icon {
-	width: 3.5rem;
-	height: 3.5rem;
-	padding: 0.9rem;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	box-sizing: border-box;
+	width: 5.5rem;
+	height: 5.5rem;
+	margin-bottom: 0.5rem;
 	border-radius: 50%;
 	background: rgb(var(--wm-warp-purple-lighter));
 	color: rgb(var(--wm-warp-purple-dark));
-	font-size: 3.5rem;
+	font-size: 3rem;
 }
 
-.wm-warp__empty h2 {
-	margin: 1.25rem 0 0.5rem;
+.wm-warp .wm-warp__empty-icon::before {
+	width: auto;
+	height: auto;
+	line-height: 1;
+}
+
+.wm-warp .wm-warp__empty h2 {
+	margin: 0;
 	color: rgb(var(--wm-warp-purple-dark));
-	font-size: 1.3rem;
+	font-size: 1.4rem;
 }
 
 .wm-warp__empty p {
 	max-width: 36rem;
-	margin: 0 auto;
+	margin: 0;
 	font-size: 0.95rem;
+	line-height: 1.6;
 }
 
-.wm-warp__empty-action {
-	margin: 1.75rem 0 1rem !important;
+.wm-warp .wm-warp__empty-action {
+	margin: 1rem 0 0.25rem;
 }
 
 /* Sites */
