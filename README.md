@@ -54,4 +54,17 @@ Every user-facing text is written in English and translated to Czech in `languag
 
 1. Set the same version in the plugin header (`Version`), the `VERSION` constant in `wm-warp.php` and `Stable tag` in `readme.txt`.
 2. Create an annotated tag with the release notes as its message and push it: `git tag -a v0.1.0 -F notes.md && git push origin v0.1.0`.
-3. GitHub Actions checks the versions, runs `composer check`, builds `wm-warp.zip` with `git archive` (development files are left out by `.gitattributes`) and publishes the release with the ZIP and its SHA-256.
+3. GitHub Actions checks the versions and the release notes, runs `composer check`, builds `wm-warp.zip` with `git archive` (development files are left out by `.gitattributes`) and publishes the release with the ZIP and its SHA-256.
+
+The release notes are shown in WordPress under “View details” → Changelog, so they describe what changed in the plugin for its users, briefly, in English. The first line of the tag message is only a title (`WM Warp 0.2.0`) and is not published; after an empty line follows a list with one change per line and the same labels as commits, in this order:
+
+```
+WM Warp 0.2.0
+
+- [ADD] New feature, in one sentence.
+- [UPDATE] Changed behaviour or look.
+- [FIX] Fixed bug, as the user saw it.
+- [REMOVE] Removed feature.
+```
+
+An optional `Note:` paragraph at the end may warn about compatibility. Never put commit messages, commit trailers (`Co-Authored-By`) or internal details in the notes; the workflow refuses notes without labelled items or with trailers.

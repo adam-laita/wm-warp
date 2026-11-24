@@ -25,6 +25,18 @@ jobs:
           echo "tag=$version header=$header constant=$constant readme=$stable"
           test "$header" = "$version" && test "$constant" = "$version" && test "$stable" = "$version"
 
+      # actions/checkout replaces the annotated tag with a lightweight one, so the release
+      # notes are read from the tag fetched again. Only the tag body is used (no subject,
+      # no trailers) and it must be a list of [ADD] / [UPDATE] / [FIX] / [REMOVE] items.
+      - name: Release notes
+        run: |
+          git fetch --force origin "refs/tags/$GITHUB_REF_NAME:refs/tags/$GITHUB_REF_NAME"
+          test "$(git cat-file -t "$GITHUB_REF_NAME")" = tag || { echo "::error::$GITHUB_REF_NAME is not an annotated tag with release notes."; exit 1; }
+          git tag -l --format='%(contents:body)' "$GITHUB_REF_NAME" | sed '/^-----BEGIN PGP SIGNATURE-----/,$d' > "$RUNNER_TEMP/notes.md"
+          cat "$RUNNER_TEMP/notes.md"
+          grep -qE '^- \[(ADD|UPDATE|FIX|REMOVE)\] ' "$RUNNER_TEMP/notes.md" || { echo "::error::Release notes need lines like '- [ADD] …' (see README, Releasing)."; exit 1; }
+          if grep -qiE '^(co-authored-by|signed-off-by):' "$RUNNER_TEMP/notes.md"; then echo "::error::Release notes must not contain commit trailers."; exit 1; fi
+
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
@@ -45,4 +57,4 @@ jobs:
       - name: Publish
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" wm-warp.zip wm-warp.zip.sha256 --title "WM Warp ${GITHUB_REF_NAME#v}" --notes-from-tag --verify-tag
+        run: gh release create "$GITHUB_REF_NAME" wm-warp.zip wm-warp.zip.sha256 --title "WM Warp ${GITHUB_REF_NAME#v}" --notes-file "$RUNNER_TEMP/notes.md" --verify-tag
