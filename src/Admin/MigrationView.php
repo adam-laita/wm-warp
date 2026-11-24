@@ -74,7 +74,8 @@ final class MigrationView {
 			)
 		);
 		?>
-		<section class="wm-warp__card wm-warp__migration" data-wm-warp-migration data-ajax="<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>" data-nonce="<?php echo esc_attr( wp_create_nonce( MigrationAjax::ACTION ) ); ?>" data-direction="<?php echo esc_attr( $direction ); ?>" data-leave="<?php esc_attr_e( 'The migration is still running. Leaving the page stops it.', 'wm-warp' ); ?>">
+		<p class="wm-warp__back"><a href="<?php echo esc_url( AdminPage::url() ); ?>"><span class="dashicons dashicons-arrow-left-alt2" aria-hidden="true"></span> <?php esc_html_e( 'Sites', 'wm-warp' ); ?></a></p>
+		<div class="wm-warp__migration" data-wm-warp-migration data-ajax="<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>" data-nonce="<?php echo esc_attr( wp_create_nonce( MigrationAjax::ACTION ) ); ?>" data-direction="<?php echo esc_attr( $direction ); ?>" data-leave="<?php esc_attr_e( 'The migration is still running. Leaving the page stops it.', 'wm-warp' ); ?>">
 			<div class="wm-warp__migration-head">
 				<h2>
 					<?php
@@ -87,24 +88,41 @@ final class MigrationView {
 					);
 					?>
 				</h2>
-				<a class="wm-warp__switch" href="<?php echo esc_url( $switch ); ?>"><?php echo esc_html( $pull ? __( 'Switch to Push', 'wm-warp' ) : __( 'Switch to Pull', 'wm-warp' ) ); ?></a>
+				<div class="wm-warp__switch" role="group" aria-label="<?php esc_attr_e( 'Direction', 'wm-warp' ); ?>">
+					<?php foreach ( array( Runner::PULL, Runner::PUSH ) as $option ) : ?>
+						<?php
+						$icon  = Runner::PULL === $option ? 'dashicons-download' : 'dashicons-upload';
+						$label = Runner::PULL === $option ? __( 'Pull', 'wm-warp' ) : __( 'Push', 'wm-warp' );
+						?>
+						<?php if ( $option === $direction ) : ?>
+							<span class="is-active" aria-current="true"><span class="dashicons <?php echo esc_attr( $icon ); ?>" aria-hidden="true"></span> <?php echo esc_html( $label ); ?></span>
+						<?php else : ?>
+							<a href="<?php echo esc_url( $switch ); ?>"><span class="dashicons <?php echo esc_attr( $icon ); ?>" aria-hidden="true"></span> <?php echo esc_html( $label ); ?></a>
+						<?php endif; ?>
+					<?php endforeach; ?>
+				</div>
 			</div>
-			<p class="wm-warp__lead">
+
+			<div class="wm-warp__route">
 				<?php
-				echo esc_html(
-					$pull
-						/* translators: %s: domain of the other site. */
-						? sprintf( __( 'The chosen data of this site will be replaced with the data of %s.', 'wm-warp' ), $host )
-						/* translators: %s: domain of the other site. */
-						: sprintf( __( 'The chosen data of %s will be replaced with the data of this site.', 'wm-warp' ), $host )
-				);
-				?>
-			</p>
+				foreach ( array( 'source', 'target' ) as $side ) :
+					$here = ( 'target' === $side ) === $pull;
+					?>
+					<?php if ( 'target' === $side ) : ?>
+						<span class="wm-warp__route-arrow dashicons dashicons-arrow-right-alt" aria-hidden="true"></span>
+					<?php endif; ?>
+					<div class="wm-warp__route-site wm-warp__route-site--<?php echo esc_attr( $side ); ?>">
+						<span class="wm-warp__route-label"><?php echo esc_html( 'source' === $side ? __( 'Source', 'wm-warp' ) : __( 'Target, will be replaced', 'wm-warp' ) ); ?></span>
+						<strong><?php echo esc_html( AdminPage::host( self::text( 'source' === $side ? $source : $target, 'home' ) ) ); ?></strong>
+						<span class="wm-warp__muted"><?php echo esc_html( $here ? __( 'this site', 'wm-warp' ) : __( 'remote site', 'wm-warp' ) ); ?></span>
+					</div>
+				<?php endforeach; ?>
+			</div>
 
 			<?php if ( '' !== $error ) : ?>
 				<div class="notice notice-error inline" role="alert"><p><?php echo esc_html( $error ); ?></p></div>
 				<p><a class="button" href="<?php echo esc_url( AdminPage::url() ); ?>"><?php esc_html_e( 'Back to sites', 'wm-warp' ); ?></a></p>
-			</section>
+			</div>
 				<?php
 				return;
 			endif;
@@ -115,8 +133,8 @@ final class MigrationView {
 				<input type="hidden" name="direction" value="<?php echo esc_attr( $direction ); ?>">
 
 				<fieldset class="wm-warp__section" data-wm-warp-group>
-					<legend><label><input type="checkbox" name="database" value="1" checked data-wm-warp-group-toggle> <?php esc_html_e( 'Database', 'wm-warp' ); ?></label></legend>
-					<div data-wm-warp-group-body>
+					<legend><label><input type="checkbox" name="database" value="1" checked data-wm-warp-group-toggle> <span class="dashicons dashicons-database" aria-hidden="true"></span> <?php esc_html_e( 'Database', 'wm-warp' ); ?></label></legend>
+					<div class="wm-warp__section-body" data-wm-warp-group-body>
 					<label class="wm-warp__choice">
 						<input type="radio" name="mode" value="<?php echo esc_attr( Schema::MODE_PREFIX ); ?>" checked>
 						<?php
@@ -147,7 +165,8 @@ final class MigrationView {
 				</fieldset>
 
 				<fieldset class="wm-warp__section" data-wm-warp-database-only>
-					<legend><?php esc_html_e( 'Find & replace', 'wm-warp' ); ?></legend>
+					<legend><span class="wm-warp__legend"><span class="dashicons dashicons-search" aria-hidden="true"></span> <?php esc_html_e( 'Find & replace', 'wm-warp' ); ?></span></legend>
+					<div class="wm-warp__section-body">
 					<p class="description"><?php esc_html_e( 'Addresses and paths of the source are replaced with those of the target, also inside serialized data and JSON. Binary data are never changed.', 'wm-warp' ); ?></p>
 					<table class="wm-warp__rules">
 						<thead>
@@ -199,27 +218,33 @@ final class MigrationView {
 							</td>
 						</tr>
 					</template>
-					<p><button type="button" class="button" data-wm-warp-add-rule><?php esc_html_e( 'Add a row', 'wm-warp' ); ?></button></p>
+					<p><button type="button" class="button" data-wm-warp-add-rule><span class="dashicons dashicons-plus-alt2" aria-hidden="true"></span> <?php esc_html_e( 'Add a row', 'wm-warp' ); ?></button></p>
+					</div>
 				</fieldset>
 
 				<?php $this->render_files( $pull, $items ); ?>
 
-				<p class="wm-warp__buttons">
-					<button type="submit" class="button button-primary button-hero"><?php echo esc_html( $pull ? __( 'Pull', 'wm-warp' ) : __( 'Push', 'wm-warp' ) ); ?></button>
-					<a class="button" href="<?php echo esc_url( AdminPage::url() ); ?>"><?php esc_html_e( 'Cancel', 'wm-warp' ); ?></a>
-				</p>
 				<div class="notice notice-error inline" data-wm-warp-form-error hidden role="alert"><p></p></div>
+				<div class="wm-warp__submitbar">
+					<button type="submit" class="button button-primary button-hero"><span class="dashicons <?php echo $pull ? 'dashicons-download' : 'dashicons-upload'; ?>" aria-hidden="true"></span> <?php echo esc_html( $pull ? sprintf( /* translators: %s: domain of the other site. */ __( 'Pull from %s', 'wm-warp' ), $host ) : sprintf( /* translators: %s: domain of the other site. */ __( 'Push to %s', 'wm-warp' ), $host ) ); ?></button>
+					<a class="button button-large" href="<?php echo esc_url( AdminPage::url() ); ?>"><?php esc_html_e( 'Cancel', 'wm-warp' ); ?></a>
+				</div>
 			</form>
 
-			<div class="wm-warp__progress" data-wm-warp-progress hidden>
-				<p class="wm-warp__phase" data-wm-warp-phase aria-live="polite"></p>
+			<div class="wm-warp__card wm-warp__progress" data-wm-warp-progress hidden>
+				<div class="wm-warp__progress-top">
+					<span class="wm-warp__percent" data-wm-warp-percent>0 %</span>
+					<p class="wm-warp__phase" data-wm-warp-phase aria-live="polite"></p>
+				</div>
 				<progress max="100" value="0" data-wm-warp-bar></progress>
-				<p class="wm-warp__stats"><span data-wm-warp-percent>0 %</span> · <span data-wm-warp-stats></span></p>
-				<p><button type="button" class="button" data-wm-warp-cancel><?php esc_html_e( 'Cancel the migration', 'wm-warp' ); ?></button></p>
+				<div class="wm-warp__progress-bottom">
+					<p class="wm-warp__stats" data-wm-warp-stats></p>
+					<button type="button" class="button" data-wm-warp-cancel><?php esc_html_e( 'Cancel the migration', 'wm-warp' ); ?></button>
+				</div>
 			</div>
 
-			<div class="wm-warp__result" data-wm-warp-result hidden>
-				<h3><?php esc_html_e( 'Done, check the site', 'wm-warp' ); ?></h3>
+			<div class="wm-warp__card wm-warp__result" data-wm-warp-result hidden>
+				<h3><span class="dashicons dashicons-yes-alt" aria-hidden="true"></span> <?php esc_html_e( 'Done, check the site', 'wm-warp' ); ?></h3>
 				<p data-wm-warp-summary></p>
 				<ul class="wm-warp__warnings" data-wm-warp-warnings hidden></ul>
 				<p class="description">
@@ -242,12 +267,12 @@ final class MigrationView {
 				<p class="wm-warp__logged-out" data-wm-warp-logged-out hidden><?php esc_html_e( 'Your user account does not exist in the pulled database, so you were logged out. Log in with an account of the pulled site to confirm or undo the migration.', 'wm-warp' ); ?></p>
 			</div>
 
-			<div class="wm-warp__final" data-wm-warp-final hidden>
+			<div class="wm-warp__card wm-warp__final" data-wm-warp-final hidden>
 				<p data-wm-warp-final-text data-confirmed="<?php esc_attr_e( 'The migration is confirmed.', 'wm-warp' ); ?>" data-rolled-back="<?php esc_attr_e( 'The migration was undone; the previous data are back.', 'wm-warp' ); ?>" data-cancelled="<?php esc_attr_e( 'The migration was cancelled; the target was not changed.', 'wm-warp' ); ?>"></p>
 				<p><a class="button" href="<?php echo esc_url( AdminPage::url() ); ?>"><?php esc_html_e( 'Back to sites', 'wm-warp' ); ?></a></p>
 			</div>
 
-			<div class="wm-warp__failure" data-wm-warp-failure hidden>
+			<div class="wm-warp__card wm-warp__failure" data-wm-warp-failure hidden>
 				<div class="notice notice-error inline" role="alert">
 					<p><strong><?php esc_html_e( 'The migration failed. The target was not changed.', 'wm-warp' ); ?></strong></p>
 					<p data-wm-warp-error-message></p>
@@ -259,7 +284,7 @@ final class MigrationView {
 				</details>
 				<p><a class="button" href="<?php echo esc_url( AdminPage::url() ); ?>"><?php esc_html_e( 'Back to sites', 'wm-warp' ); ?></a></p>
 			</div>
-		</section>
+		</div>
 		<?php
 	}
 
@@ -273,8 +298,8 @@ final class MigrationView {
 		$php_help = __( 'WordPress and page builders (Elementor, Bricks…) do not need PHP in uploads; they store only images, CSS and fonts there. PHP files in uploads are either empty protection files that plugins create by themselves, or malicious code of a hacked site. Turn this on only if you know your site needs them.', 'wm-warp' );
 		?>
 		<fieldset class="wm-warp__section" data-wm-warp-group>
-			<legend><label><input type="checkbox" name="files_uploads" value="1" data-wm-warp-group-toggle> <?php esc_html_e( 'Media Uploads', 'wm-warp' ); ?></label></legend>
-			<div data-wm-warp-group-body hidden>
+			<legend><label><input type="checkbox" name="files_uploads" value="1" data-wm-warp-group-toggle> <span class="dashicons dashicons-admin-media" aria-hidden="true"></span> <?php esc_html_e( 'Media Uploads', 'wm-warp' ); ?></label></legend>
+			<div class="wm-warp__section-body" data-wm-warp-group-body hidden>
 				<label class="wm-warp__choice">
 					<input type="radio" name="uploads_mode" value="sync" checked>
 					<?php esc_html_e( 'Synchronize: transfer new and changed files, delete nothing', 'wm-warp' ); ?>
@@ -347,8 +372,8 @@ final class MigrationView {
 		$first = (string) array_key_first( $modes );
 		?>
 		<fieldset class="wm-warp__section" data-wm-warp-group>
-			<legend><label><input type="checkbox" name="files_<?php echo esc_attr( $group ); ?>" value="1" data-wm-warp-group-toggle> <?php echo esc_html( $title ); ?></label></legend>
-			<div data-wm-warp-group-body data-wm-warp-items hidden>
+			<legend><label><input type="checkbox" name="files_<?php echo esc_attr( $group ); ?>" value="1" data-wm-warp-group-toggle> <span class="dashicons <?php echo esc_attr( Groups::THEMES === $group ? 'dashicons-admin-appearance' : 'dashicons-admin-plugins' ); ?>" aria-hidden="true"></span> <?php echo esc_html( $title ); ?></label></legend>
+			<div class="wm-warp__section-body" data-wm-warp-group-body data-wm-warp-items hidden>
 				<?php foreach ( $modes as $mode => $label ) : ?>
 					<label class="wm-warp__choice">
 						<input type="radio" name="<?php echo esc_attr( $group ); ?>_mode" value="<?php echo esc_attr( $mode ); ?>"<?php checked( $mode, $first ); ?>>
@@ -374,6 +399,7 @@ final class MigrationView {
 							</li>
 						<?php endforeach; ?>
 					</ul>
+					<p class="description wm-warp__items-empty" data-wm-warp-items-empty hidden><?php esc_html_e( 'Nothing on the source matches this choice.', 'wm-warp' ); ?></p>
 				<?php endif; ?>
 				<p class="description"><?php esc_html_e( 'Each chosen item is replaced as a whole folder, so no files of the old version stay behind. Items that are only on the target stay as they are.', 'wm-warp' ); ?></p>
 				<details class="wm-warp__more">

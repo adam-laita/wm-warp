@@ -68,7 +68,7 @@ msgstr "K této stránce nemáte přístup."
 msgid "Warp"
 msgstr "Warp"
 
-#: src/Admin/AdminPage.php
+#: src/Admin/AdminPage.php src/Admin/MigrationView.php src/Admin/SitesView.php
 msgid "Sites"
 msgstr "Weby"
 
@@ -79,6 +79,12 @@ msgstr "Nastavení"
 #: src/Admin/AdminPage.php
 msgid "Pull and push the database and files between your WordPress sites."
 msgstr "Pull a Push databáze a souborů mezi vašimi weby na WordPressu."
+
+#. translators: %s: Warp version.
+#. translators: %s: Warp version on the other site.
+#: src/Admin/AdminPage.php src/Admin/SitesView.php
+msgid "Warp %s"
+msgstr "Warp %s"
 
 #: src/Admin/AdminPage.php
 msgid "Warp sections"
@@ -263,22 +269,32 @@ msgid "Push to %s"
 msgstr "Push na %s"
 
 #: src/Admin/MigrationView.php
-msgid "Switch to Push"
-msgstr "Přepnout na Push"
+msgid "Direction"
+msgstr "Směr"
+
+#: src/Admin/MigrationView.php src/Admin/SitesView.php
+msgid "Pull"
+msgstr "Pull"
+
+#: src/Admin/MigrationView.php src/Admin/SitesView.php
+msgid "Push"
+msgstr "Push"
 
 #: src/Admin/MigrationView.php
-msgid "Switch to Pull"
-msgstr "Přepnout na Pull"
+msgid "Source"
+msgstr "Zdroj"
 
-#. translators: %s: domain of the other site.
 #: src/Admin/MigrationView.php
-msgid "The chosen data of this site will be replaced with the data of %s."
-msgstr "Vybraná data tohoto webu budou nahrazena daty z %s."
+msgid "Target, will be replaced"
+msgstr "Cíl, bude nahrazen"
 
-#. translators: %s: domain of the other site.
 #: src/Admin/MigrationView.php
-msgid "The chosen data of %s will be replaced with the data of this site."
-msgstr "Vybraná data webu %s budou nahrazena daty tohoto webu."
+msgid "this site"
+msgstr "tento web"
+
+#: src/Admin/MigrationView.php
+msgid "remote site"
+msgstr "vzdálený web"
 
 #: src/Admin/MigrationView.php
 msgid "Back to sites"
@@ -369,14 +385,6 @@ msgstr "Odebrat"
 #: src/Admin/MigrationView.php
 msgid "Add a row"
 msgstr "Přidat řádek"
-
-#: src/Admin/MigrationView.php src/Admin/SitesView.php
-msgid "Pull"
-msgstr "Pull"
-
-#: src/Admin/MigrationView.php src/Admin/SitesView.php
-msgid "Push"
-msgstr "Push"
 
 #: src/Admin/MigrationView.php src/Admin/SitesView.php
 msgid "Cancel"
@@ -508,6 +516,10 @@ msgid "link, never transferred"
 msgstr "odkaz, nikdy se nepřenáší"
 
 #: src/Admin/MigrationView.php
+msgid "Nothing on the source matches this choice."
+msgstr "Na zdroji této volbě nic neodpovídá."
+
+#: src/Admin/MigrationView.php
 msgid "Each chosen item is replaced as a whole folder, so no files of the old version stay behind. Items that are only on the target stay as they are."
 msgstr "Každá vybraná položka se vymění jako celá složka, takže po staré verzi nezůstanou žádné soubory. Položky, které má jen cíl, zůstanou, jak jsou."
 
@@ -587,11 +599,11 @@ msgstr "Weby připojené k tomuto webu"
 msgid "No other site is connected to this site."
 msgstr "K tomuto webu není připojený žádný jiný web."
 
-#: src/Admin/SettingsView.php src/Admin/SitesView.php
+#: src/Admin/SettingsView.php
 msgid "Site"
 msgstr "Web"
 
-#: src/Admin/SettingsView.php src/Admin/SitesView.php
+#: src/Admin/SettingsView.php
 msgid "Connected"
 msgstr "Připojeno"
 
@@ -599,7 +611,7 @@ msgstr "Připojeno"
 msgid "Last request"
 msgstr "Poslední požadavek"
 
-#: src/Admin/SettingsView.php src/Admin/SitesView.php
+#: src/Admin/SettingsView.php
 msgid "Actions"
 msgstr "Akce"
 
@@ -644,10 +656,18 @@ msgstr "Připojit nový web"
 msgid "You will need the key of the other site: Tools → Warp → Settings on that site."
 msgstr "Budete potřebovat klíč druhého webu: na něm Nástroje → Warp → Nastavení."
 
-#. translators: %s: Warp version on the other site.
 #: src/Admin/SitesView.php
-msgid "Warp %s"
-msgstr "Warp %s"
+msgid "Connected sites"
+msgstr "Propojené weby"
+
+#: src/Admin/SitesView.php
+msgid "The other site has a different version of Warp."
+msgstr "Druhý web má jinou verzi Warpu."
+
+#. translators: 1: name of the site, 2: date of connecting.
+#: src/Admin/SitesView.php
+msgid "%1$s · connected %2$s"
+msgstr "%1$s · připojeno %2$s"
 
 #. translators: %s: name of the site.
 #: src/Admin/SitesView.php

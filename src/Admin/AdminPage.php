@@ -131,19 +131,37 @@ final class AdminPage {
 		?>
 		<div class="wrap wm-warp">
 			<header class="wm-warp__header">
-				<h1 class="wm-warp__title"><?php esc_html_e( 'Warp', 'wm-warp' ); ?></h1>
-				<p class="wm-warp__subtitle"><?php esc_html_e( 'Pull and push the database and files between your WordPress sites.', 'wm-warp' ); ?></p>
+				<div class="wm-warp__brand">
+					<h1 class="wm-warp__title"><?php esc_html_e( 'Warp', 'wm-warp' ); ?></h1>
+					<p class="wm-warp__subtitle"><?php esc_html_e( 'Pull and push the database and files between your WordPress sites.', 'wm-warp' ); ?></p>
+				</div>
+				<p class="wm-warp__meta">
+					<span class="wm-warp__meta-site"><?php echo esc_html( self::host( home_url() ) ); ?></span>
+					<span class="wm-warp__meta-version">
+						<?php
+						/* translators: %s: Warp version. */
+						echo esc_html( sprintf( __( 'Warp %s', 'wm-warp' ), VERSION ) );
+						?>
+					</span>
+				</p>
 			</header>
 
-			<nav class="nav-tab-wrapper wm-warp__tabs" aria-label="<?php esc_attr_e( 'Warp sections', 'wm-warp' ); ?>">
-				<?php foreach ( $tabs->all() as $slug => $label ) : ?>
-					<a
-						href="<?php echo esc_url( self::url( 'sites' === $slug ? array() : array( 'tab' => $slug ) ) ); ?>"
-						class="nav-tab<?php echo $slug === $current ? ' nav-tab-active' : ''; ?>"
-						<?php echo $slug === $current ? 'aria-current="page"' : ''; ?>
-					><?php echo esc_html( $label ); ?></a>
-				<?php endforeach; ?>
+			<nav class="wm-warp__tabs" aria-label="<?php esc_attr_e( 'Warp sections', 'wm-warp' ); ?>">
+				<ul>
+					<?php foreach ( $tabs->all() as $slug => $label ) : ?>
+						<li>
+							<a
+								href="<?php echo esc_url( self::url( 'sites' === $slug ? array() : array( 'tab' => $slug ) ) ); ?>"
+								class="wm-warp__tab<?php echo $slug === $current ? ' is-active' : ''; ?>"
+								<?php echo $slug === $current ? 'aria-current="page"' : ''; ?>
+							><?php echo esc_html( $label ); ?></a>
+						</li>
+					<?php endforeach; ?>
+				</ul>
 			</nav>
+
+			<div class="wm-warp__body">
+			<hr class="wp-header-end">
 
 			<?php if ( null !== $flash ) : ?>
 				<div class="notice notice-<?php echo esc_attr( $flash['type'] ); ?> inline wm-warp__notice" role="<?php echo 'error' === $flash['type'] ? 'alert' : 'status'; ?>">
@@ -168,6 +186,7 @@ final class AdminPage {
 					( new SitesView( $this->outgoing ) )->render_list();
 				}
 				?>
+			</div>
 			</div>
 		</div>
 		<?php
@@ -199,7 +218,8 @@ final class AdminPage {
 			'rollback' => __( 'Undo', 'wm-warp' ),
 		);
 		?>
-		<div class="notice notice-warning inline wm-warp__pending">
+		<div class="wm-warp__pending" role="status">
+			<span class="dashicons dashicons-backup" aria-hidden="true"></span>
 			<p><?php echo esc_html( $text ); ?></p>
 			<div class="wm-warp__pending-actions">
 				<?php foreach ( $buttons as $command => $label ) : ?>
@@ -223,6 +243,17 @@ final class AdminPage {
 	 */
 	public static function url( array $args = array() ): string {
 		return add_query_arg( array_merge( array( 'page' => self::SLUG ), $args ), admin_url( 'tools.php' ) );
+	}
+
+	/**
+	 * Host of an address for display, e.g. warpb.local.
+	 *
+	 * @param string $url Address.
+	 */
+	public static function host( string $url ): string {
+		$host = wp_parse_url( $url, PHP_URL_HOST );
+
+		return is_string( $host ) ? $host : $url;
 	}
 
 	/**

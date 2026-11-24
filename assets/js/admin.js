@@ -130,6 +130,10 @@
 				part( other ).hidden = other !== name;
 			} );
 			form.hidden = true;
+			// The direction cannot change once the migration started.
+			root.querySelectorAll( '.wm-warp__switch' ).forEach( function ( element ) {
+				element.hidden = true;
+			} );
 		};
 		var formError = function ( message ) {
 			var box = part( 'form-error' );
@@ -231,7 +235,9 @@
 		// Sections with a checkbox in the legend: Database, Media, Themes, Plugins.
 		form.querySelectorAll( '[data-wm-warp-group-toggle]' ).forEach( function ( toggle ) {
 			var update = function () {
-				toggle.closest( '[data-wm-warp-group]' ).querySelector( '[data-wm-warp-group-body]' ).hidden = ! toggle.checked;
+				var group = toggle.closest( '[data-wm-warp-group]' );
+				group.querySelector( '[data-wm-warp-group-body]' ).hidden = ! toggle.checked;
+				group.classList.toggle( 'is-off', ! toggle.checked );
 				if ( 'database' === toggle.name ) {
 					form.querySelectorAll( '[data-wm-warp-database-only]' ).forEach( function ( section ) {
 						section.hidden = ! toggle.checked;
@@ -253,10 +259,18 @@
 			var update = function () {
 				var checked = box.querySelector( 'input[type="radio"]:checked' );
 				var mode = checked ? checked.value : 'all';
+				var visible = 0;
 				box.querySelectorAll( '.wm-warp__item' ).forEach( function ( row ) {
 					row.hidden = 'active' === mode && '1' !== row.getAttribute( 'data-active' );
 					row.querySelector( '[data-wm-warp-item-check]' ).hidden = 'selected' !== mode && 'except' !== mode;
+					visible += row.hidden ? 0 : 1;
 				} );
+				var list = box.querySelector( '.wm-warp__items' );
+				var empty = box.querySelector( '[data-wm-warp-items-empty]' );
+				if ( list && empty ) {
+					list.hidden = 0 === visible;
+					empty.hidden = 0 !== visible;
+				}
 			};
 			box.querySelectorAll( 'input[type="radio"]' ).forEach( function ( radio ) {
 				radio.addEventListener( 'change', update );

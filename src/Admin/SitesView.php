@@ -33,85 +33,79 @@ final class SitesView {
 
 		if ( array() === $connections ) {
 			?>
-			<section class="wm-warp__empty">
+			<section class="wm-warp__card wm-warp__empty">
+				<span class="wm-warp__empty-icon dashicons dashicons-admin-site-alt3" aria-hidden="true"></span>
 				<h2><?php esc_html_e( 'No sites connected yet', 'wm-warp' ); ?></h2>
 				<p><?php esc_html_e( 'Connect another site with Warp installed, then pull or push its database and files in a few clicks.', 'wm-warp' ); ?></p>
 				<p class="wm-warp__empty-action">
 					<a class="button button-primary button-hero" href="<?php echo esc_url( $connect_url ); ?>"><?php esc_html_e( 'Connect a new site', 'wm-warp' ); ?></a>
 				</p>
-				<p class="wm-warp__hint"><?php esc_html_e( 'You will need the key of the other site: Tools → Warp → Settings on that site.', 'wm-warp' ); ?></p>
+				<p class="description"><?php esc_html_e( 'You will need the key of the other site: Tools → Warp → Settings on that site.', 'wm-warp' ); ?></p>
 			</section>
 			<?php
 			return;
 		}
 		?>
-		<div class="wm-warp__toolbar">
-			<a class="button button-primary" href="<?php echo esc_url( $connect_url ); ?>"><?php esc_html_e( 'Connect a new site', 'wm-warp' ); ?></a>
-		</div>
+		<section class="wm-warp__card">
+			<header class="wm-warp__card-head">
+				<h2>
+					<?php esc_html_e( 'Connected sites', 'wm-warp' ); ?>
+					<span class="wm-warp__count"><?php echo esc_html( (string) count( $connections ) ); ?></span>
+				</h2>
+				<a class="button button-primary" href="<?php echo esc_url( $connect_url ); ?>"><span class="dashicons dashicons-plus-alt2" aria-hidden="true"></span> <?php esc_html_e( 'Connect a new site', 'wm-warp' ); ?></a>
+			</header>
 
-		<table class="widefat striped wm-warp__sites">
-			<thead>
-				<tr>
-					<th scope="col"><?php esc_html_e( 'Site', 'wm-warp' ); ?></th>
-					<th scope="col"><?php esc_html_e( 'Connected', 'wm-warp' ); ?></th>
-					<th scope="col"><span class="screen-reader-text"><?php esc_html_e( 'Actions', 'wm-warp' ); ?></span></th>
-				</tr>
-			</thead>
-			<tbody>
+			<ul class="wm-warp__sites">
 			<?php foreach ( $connections as $connection ) : ?>
-				<?php $remote_version = isset( $connection->remote['version'] ) && is_string( $connection->remote['version'] ) ? $connection->remote['version'] : ''; ?>
-				<tr>
-					<td>
-						<strong class="wm-warp__site-name"><?php echo esc_html( $connection->name ); ?></strong>
-						<a class="wm-warp__site-url" href="<?php echo esc_url( $connection->url ); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html( $connection->host() ); ?></a>
+				<?php
+				$remote_version = isset( $connection->remote['version'] ) && is_string( $connection->remote['version'] ) ? $connection->remote['version'] : '';
+				$migrate        = static fn( string $direction ): string => AdminPage::url(
+					array(
+						'view'       => 'migrate',
+						'connection' => $connection->id,
+						'direction'  => $direction,
+					)
+				);
+				?>
+				<li class="wm-warp__site">
+					<span class="wm-warp__site-icon dashicons dashicons-admin-site-alt3" aria-hidden="true"></span>
+					<div class="wm-warp__site-main">
+						<a class="wm-warp__site-host" href="<?php echo esc_url( $connection->url ); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html( $connection->host() ); ?></a>
 						<?php if ( '' !== $remote_version && VERSION !== $remote_version ) : ?>
-							<span class="wm-warp__badge">
+							<span class="wm-warp__badge" title="<?php esc_attr_e( 'The other site has a different version of Warp.', 'wm-warp' ); ?>">
 								<?php
 								/* translators: %s: Warp version on the other site. */
 								echo esc_html( sprintf( __( 'Warp %s', 'wm-warp' ), $remote_version ) );
 								?>
 							</span>
 						<?php endif; ?>
-					</td>
-					<td><?php echo esc_html( AdminPage::date( $connection->created ) ); ?></td>
-					<td class="wm-warp__actions">
-						<a class="button button-primary" href="
-						<?php
-						echo esc_url(
-							AdminPage::url(
-								array(
-									'view'       => 'migrate',
-									'connection' => $connection->id,
-									'direction'  => 'pull',
+						<span class="wm-warp__site-name">
+							<?php
+							echo esc_html(
+								sprintf(
+									/* translators: 1: name of the site, 2: date of connecting. */
+									__( '%1$s · connected %2$s', 'wm-warp' ),
+									$connection->name,
+									AdminPage::date( $connection->created )
 								)
-							)
-						);
-						?>
-																"><?php esc_html_e( 'Pull', 'wm-warp' ); ?></a>
-						<a class="button" href="
-						<?php
-						echo esc_url(
-							AdminPage::url(
-								array(
-									'view'       => 'migrate',
-									'connection' => $connection->id,
-									'direction'  => 'push',
-								)
-							)
-						);
-						?>
-												"><?php esc_html_e( 'Push', 'wm-warp' ); ?></a>
-						<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" data-wm-warp-confirm="<?php echo esc_attr( sprintf( /* translators: %s: name of the site. */ __( 'Disconnect %s? To connect it again you will need its key.', 'wm-warp' ), $connection->name ) ); ?>">
+							);
+							?>
+						</span>
+					</div>
+					<div class="wm-warp__site-actions">
+						<a class="button button-primary wm-warp__go" href="<?php echo esc_url( $migrate( 'pull' ) ); ?>"><span class="dashicons dashicons-download" aria-hidden="true"></span> <?php esc_html_e( 'Pull', 'wm-warp' ); ?></a>
+						<a class="button wm-warp__go" href="<?php echo esc_url( $migrate( 'push' ) ); ?>"><span class="dashicons dashicons-upload" aria-hidden="true"></span> <?php esc_html_e( 'Push', 'wm-warp' ); ?></a>
+						<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" data-wm-warp-confirm="<?php echo esc_attr( sprintf( /* translators: %s: name of the site. */ __( 'Disconnect %s? To connect it again you will need its key.', 'wm-warp' ), $connection->host() ) ); ?>">
 							<input type="hidden" name="action" value="<?php echo esc_attr( Actions::DISCONNECT ); ?>">
 							<input type="hidden" name="connection" value="<?php echo esc_attr( $connection->id ); ?>">
 							<?php wp_nonce_field( Actions::DISCONNECT ); ?>
 							<button type="submit" class="button-link wm-warp__danger"><?php esc_html_e( 'Disconnect', 'wm-warp' ); ?></button>
 						</form>
-					</td>
-				</tr>
+					</div>
+				</li>
 			<?php endforeach; ?>
-			</tbody>
-		</table>
+			</ul>
+		</section>
 		<?php
 	}
 
@@ -127,10 +121,13 @@ final class SitesView {
 		$ip      = $form['ip'] ?? '';
 		$ip_open = '' !== $ip || 'ip' === $field;
 		?>
+		<p class="wm-warp__back"><a href="<?php echo esc_url( AdminPage::url() ); ?>"><span class="dashicons dashicons-arrow-left-alt2" aria-hidden="true"></span> <?php esc_html_e( 'Sites', 'wm-warp' ); ?></a></p>
 		<section class="wm-warp__card wm-warp__connect">
-			<h2><?php esc_html_e( 'Connect a new site', 'wm-warp' ); ?></h2>
+			<header class="wm-warp__card-head">
+				<h2><?php esc_html_e( 'Connect a new site', 'wm-warp' ); ?></h2>
+			</header>
 
-			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+			<form class="wm-warp__card-body" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 				<input type="hidden" name="action" value="<?php echo esc_attr( Actions::CONNECT ); ?>">
 				<?php wp_nonce_field( Actions::CONNECT ); ?>
 
@@ -180,7 +177,7 @@ final class SitesView {
 				<?php endif; ?>
 
 				<p class="wm-warp__buttons">
-					<button type="submit" class="button button-primary"><?php esc_html_e( 'Connect', 'wm-warp' ); ?></button>
+					<button type="submit" class="button button-primary button-large"><?php esc_html_e( 'Connect', 'wm-warp' ); ?></button>
 					<a class="button" href="<?php echo esc_url( AdminPage::url() ); ?>"><?php esc_html_e( 'Cancel', 'wm-warp' ); ?></a>
 				</p>
 			</form>

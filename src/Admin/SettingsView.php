@@ -34,8 +34,10 @@ final class SettingsView {
 	 */
 	public function render(): void {
 		$this->render_key();
+		echo '<div class="wm-warp__grid">';
 		$this->render_peers();
 		$this->render_facts();
+		echo '</div>';
 	}
 
 	/**
@@ -44,7 +46,10 @@ final class SettingsView {
 	private function render_key(): void {
 		?>
 		<section class="wm-warp__card">
-			<h2><?php esc_html_e( 'Key of this site', 'wm-warp' ); ?></h2>
+			<header class="wm-warp__card-head">
+				<h2><?php esc_html_e( 'Key of this site', 'wm-warp' ); ?></h2>
+			</header>
+			<div class="wm-warp__card-body">
 			<p class="description"><?php esc_html_e( 'Paste it on the other site in Connect a new site. The key is used only to make a connection; keep it private, anyone with the key can connect to this site.', 'wm-warp' ); ?></p>
 			<div class="wm-warp__key">
 				<textarea id="wm-warp-site-key" rows="3" readonly spellcheck="false" aria-label="<?php esc_attr_e( 'Key of this site', 'wm-warp' ); ?>"><?php echo esc_textarea( $this->identity->key()->encode() ); ?></textarea>
@@ -53,8 +58,9 @@ final class SettingsView {
 			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" data-wm-warp-confirm="<?php esc_attr_e( 'Generate a new key? The current key stops working; connected sites keep working.', 'wm-warp' ); ?>">
 				<input type="hidden" name="action" value="<?php echo esc_attr( Actions::REGENERATE ); ?>">
 				<?php wp_nonce_field( Actions::REGENERATE ); ?>
-				<button type="submit" class="button"><?php esc_html_e( 'Generate a new key', 'wm-warp' ); ?></button>
+				<button type="submit" class="button"><span class="dashicons dashicons-update" aria-hidden="true"></span> <?php esc_html_e( 'Generate a new key', 'wm-warp' ); ?></button>
 			</form>
+			</div>
 		</section>
 		<?php
 	}
@@ -66,11 +72,13 @@ final class SettingsView {
 		$peers = $this->incoming->all();
 		?>
 		<section class="wm-warp__card">
-			<h2><?php esc_html_e( 'Sites connected to this site', 'wm-warp' ); ?></h2>
+			<header class="wm-warp__card-head">
+				<h2><?php esc_html_e( 'Sites connected to this site', 'wm-warp' ); ?></h2>
+			</header>
 			<?php if ( array() === $peers ) : ?>
-				<p class="description"><?php esc_html_e( 'No other site is connected to this site.', 'wm-warp' ); ?></p>
+				<p class="wm-warp__card-body description"><?php esc_html_e( 'No other site is connected to this site.', 'wm-warp' ); ?></p>
 			<?php else : ?>
-				<table class="widefat striped">
+				<table class="wm-warp__table">
 					<thead>
 						<tr>
 							<th scope="col"><?php esc_html_e( 'Site', 'wm-warp' ); ?></th>
@@ -82,7 +90,7 @@ final class SettingsView {
 					<tbody>
 					<?php foreach ( $peers as $peer ) : ?>
 						<tr>
-							<td><strong><?php echo esc_html( $peer->name ); ?></strong> <span class="wm-warp__site-url"><?php echo esc_html( $peer->host() ); ?></span></td>
+							<td><strong><?php echo esc_html( $peer->host() ); ?></strong> <span class="wm-warp__muted"><?php echo esc_html( $peer->name ); ?></span></td>
 							<td><?php echo esc_html( AdminPage::date( $peer->created ) ); ?></td>
 							<td><?php echo esc_html( AdminPage::date( $peer->last_seen ) ); ?></td>
 							<td class="wm-warp__actions">
@@ -116,8 +124,10 @@ final class SettingsView {
 		);
 		?>
 		<section class="wm-warp__card">
-			<h2><?php esc_html_e( 'This site', 'wm-warp' ); ?></h2>
-			<table class="wm-warp__facts">
+			<header class="wm-warp__card-head">
+				<h2><?php esc_html_e( 'This site', 'wm-warp' ); ?></h2>
+			</header>
+			<table class="wm-warp__table wm-warp__facts">
 				<tbody>
 				<?php foreach ( $rows as $label => $value ) : ?>
 					<tr>
