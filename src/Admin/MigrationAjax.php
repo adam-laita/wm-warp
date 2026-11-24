@@ -171,6 +171,7 @@ final class MigrationAjax {
 			$mode     = isset( $_POST[ $group . '_mode' ] ) ? sanitize_key( wp_unslash( $_POST[ $group . '_mode' ] ) ) : '';
 			$selected = isset( $_POST[ $group . '_items' ] ) && is_array( $_POST[ $group . '_items' ] ) ? array_values( array_map( 'sanitize_text_field', wp_unslash( $_POST[ $group . '_items' ] ) ) ) : array();
 			$excludes = isset( $_POST[ $group . '_excludes' ] ) ? sanitize_textarea_field( wp_unslash( $_POST[ $group . '_excludes' ] ) ) : '';
+			$markdown = isset( $_POST[ $group . '_markdown' ] ) ? sanitize_key( wp_unslash( $_POST[ $group . '_markdown' ] ) ) : '';
 			$since    = 0;
 
 			if ( Groups::UPLOADS === $group ) {
@@ -194,7 +195,7 @@ final class MigrationAjax {
 				'mode'      => $mode,
 				'selected'  => $selected,
 				'since'     => $since,
-				'excludes'  => Excludes::lines( $excludes ),
+				'excludes'  => array_merge( Groups::markdown_excludes( $markdown ), Excludes::lines( $excludes ) ),
 				'allow_php' => Groups::UPLOADS === $group && ! empty( $_POST['uploads_php'] ),
 			);
 		}

@@ -70,4 +70,23 @@ final class ExcludesTest extends TestCase {
 		$this->assertFalse( $excludes->matches( 'keep.log', false ) );
 		$this->assertFalse( $excludes->matches( '# comment', false ) );
 	}
+
+	/**
+	 * A negation re-includes what an earlier pattern excluded; the last matching pattern wins.
+	 */
+	public function test_negation(): void {
+		$excludes = new Excludes( array( '*.md', '!readme.md', 'docs/' ) );
+
+		$this->assertTrue( $excludes->matches( 'CHANGELOG.md', false ) );
+		$this->assertTrue( $excludes->matches( 'vendor/lib/notes.MD', false ) );
+		$this->assertFalse( $excludes->matches( 'README.md', false ) );
+		$this->assertFalse( $excludes->matches( 'vendor/lib/Readme.md', false ) );
+		$this->assertTrue( $excludes->covers( 'docs/README.md' ), 'A file inside an excluded folder stays excluded.' );
+
+		$again = new Excludes( array( '*.md', '!readme.md', 'readme.md' ) );
+		$this->assertTrue( $again->matches( 'readme.md', false ) );
+
+		$alone = new Excludes( array( '!readme.md' ) );
+		$this->assertFalse( $alone->matches( 'readme.md', false ) );
+	}
 }

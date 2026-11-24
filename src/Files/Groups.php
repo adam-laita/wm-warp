@@ -39,6 +39,25 @@ final class Groups {
 	public const PHP_PATTERNS = array( '*.php', '*.phtml', '*.phar', '*.pht', '*.phps', '*.php3', '*.php4', '*.php5', '*.php7', '*.php8' );
 
 	/**
+	 * Choices for Markdown files (.md) and their patterns.
+	 */
+	public const MARKDOWN = array(
+		'keep'   => array(),
+		'all'    => array( '*.md' ),
+		'readme' => array( '*.md', '!readme.md' ),
+	);
+
+	/**
+	 * Patterns of a Markdown choice; an unknown choice excludes nothing.
+	 *
+	 * @param string $choice Choice: keep, all or readme.
+	 * @return list<string>
+	 */
+	public static function markdown_excludes( string $choice ): array {
+		return self::MARKDOWN[ $choice ] ?? array();
+	}
+
+	/**
 	 * Editable exclusions offered in the form.
 	 *
 	 * @param string $group Group.
@@ -76,7 +95,8 @@ final class Groups {
 	 * @param bool     $allow_php Transfer PHP files in uploads.
 	 */
 	public static function excludes( string $group, array $patterns, bool $allow_php ): Excludes {
-		$all = array_merge( self::FIXED, $patterns );
+		// Fixed patterns come after the user's, so a negation ("!") cannot re-include them.
+		$all = array_merge( $patterns, self::FIXED );
 
 		if ( self::UPLOADS === $group && ! $allow_php ) {
 			$all = array_merge( $all, self::PHP_PATTERNS );

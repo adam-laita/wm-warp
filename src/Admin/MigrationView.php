@@ -391,6 +391,24 @@ final class MigrationView {
 	 * @param string $group Group.
 	 */
 	private function render_excludes( string $group ): void {
+		if ( Groups::THEMES === $group ) {
+			$choices = array(
+				'keep'   => __( 'Transfer Markdown files (.md)', 'wm-warp' ),
+				'all'    => __( 'Exclude all Markdown files (.md)', 'wm-warp' ),
+				'readme' => __( 'Exclude Markdown files (.md) except README.md', 'wm-warp' ),
+			);
+			?>
+			<fieldset class="wm-warp__markdown">
+				<legend class="screen-reader-text"><?php esc_html_e( 'Markdown files', 'wm-warp' ); ?></legend>
+				<?php foreach ( $choices as $value => $label ) : ?>
+					<label class="wm-warp__choice">
+						<input type="radio" name="<?php echo esc_attr( $group ); ?>_markdown" value="<?php echo esc_attr( $value ); ?>"<?php checked( $value, 'keep' ); ?>>
+						<?php echo esc_html( $label ); ?>
+					</label>
+				<?php endforeach; ?>
+			</fieldset>
+			<?php
+		}
 		?>
 		<p>
 			<label for="wm-warp-<?php echo esc_attr( $group ); ?>-excludes"><?php esc_html_e( 'One pattern per line, like .gitignore (e.g. *.log or cache/).', 'wm-warp' ); ?></label>

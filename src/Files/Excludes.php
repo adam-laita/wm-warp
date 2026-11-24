@@ -15,9 +15,11 @@ namespace WM\Warp\Files;
  * - "*.log" or "Thumbs.db" (no slash) matches the name at any depth;
  * - "/cache" or "a/b" (a slash at the start or inside) matches from the root of the group;
  * - "cache/" (trailing slash) matches only folders;
- * - "*" and "?" do not cross a slash, "**" does; lines starting with "#" are comments.
+ * - "*" and "?" do not cross a slash, "**" does; lines starting with "#" are comments;
+ * - "!readme.md" re-includes what an earlier pattern excluded (the last matching pattern wins); like in
+ *   .gitignore, a file inside an excluded folder cannot be re-included.
  *
- * Letter case is ignored ("*.LOG" is excluded too). Negation ("!") is not supported.
+ * Letter case is ignored ("*.LOG" is excluded too).
  * Pure logic without WordPress calls.
  */
 final class Excludes {
@@ -25,7 +27,7 @@ final class Excludes {
 	/**
 	 * Compiled patterns.
 	 *
-	 * @var list<array{regex: string, dir: bool}>
+	 * @var list<array{regex: string, dir: bool, negate: bool}>
 	 */
 	private array $patterns = array();
 
@@ -39,9 +41,12 @@ final class Excludes {
 		foreach ( $patterns as $pattern ) {
 			$pattern = trim( $pattern );
 
-			if ( '' === $pattern || str_starts_with( $pattern, '#' ) || str_starts_with( $pattern, '!' ) ) {
+			if ( '' === $pattern || str_starts_with( $pattern, '#' ) ) {
 				continue;
 			}
+
+			$negate  = str_starts_with( $pattern, '!' );
+			$pattern = $negate ? substr( $pattern, 1 ) : $pattern;
 
 			$dir     = str_ends_with( $pattern, '/' );
 			$pattern = rtrim( $pattern, '/' );
@@ -55,8 +60,9 @@ final class Excludes {
 			$body     = self::glob_to_regex( $pattern );
 
 			$this->patterns[] = array(
-				'regex' => '#' . ( $anchored ? '^' : '(?:^|/)' ) . $body . '$#iu',
-				'dir'   => $dir,
+				'regex'  => '#' . ( $anchored ? '^' : '(?:^|/)' ) . $body . '$#iu',
+				'dir'    => $dir,
+				'negate' => $negate,
 			);
 		}
 	}
@@ -80,13 +86,19 @@ final class Excludes {
 	 * @param bool   $is_dir Whether the path is a folder.
 	 */
 	public function matches( string $path, bool $is_dir ): bool {
+		$excluded = false;
+
 		foreach ( $this->patterns as $pattern ) {
+			if ( $excluded !== $pattern['negate'] ) {
+				continue;
+			}
+
 			if ( ( $is_dir || ! $pattern['dir'] ) && 1 === preg_match( $pattern['regex'], $path ) ) {
-				return true;
+				$excluded = ! $pattern['negate'];
 			}
 		}
 
-		return false;
+		return $excluded;
 	}
 
 	/**

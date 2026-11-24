@@ -509,6 +509,22 @@ msgid "Excluded files"
 msgstr ""
 
 #: src/Admin/MigrationView.php
+msgid "Transfer Markdown files (.md)"
+msgstr ""
+
+#: src/Admin/MigrationView.php
+msgid "Exclude all Markdown files (.md)"
+msgstr ""
+
+#: src/Admin/MigrationView.php
+msgid "Exclude Markdown files (.md) except README.md"
+msgstr ""
+
+#: src/Admin/MigrationView.php
+msgid "Markdown files"
+msgstr ""
+
+#: src/Admin/MigrationView.php
 msgid "One pattern per line, like .gitignore (e.g. *.log or cache/)."
 msgstr ""
 
