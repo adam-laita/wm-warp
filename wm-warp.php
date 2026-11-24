@@ -3,7 +3,7 @@
  * Plugin Name:       WM Warp
  * Plugin URI:        https://github.com/adam-laita/wm-warp
  * Description:       Data migration and synchronization between WordPress sites.
- * Version:           0.2.0
+ * Version:           0.2.1
  * Requires at least: 6.6
  * Requires PHP:      8.3
  * Author:            WebManiak
@@ -23,7 +23,7 @@ namespace WM\Warp;
 
 defined( 'ABSPATH' ) || exit;
 
-const VERSION     = '0.2.0';
+const VERSION     = '0.2.1';
 const PLUGIN_FILE = __FILE__;
 
 /*
